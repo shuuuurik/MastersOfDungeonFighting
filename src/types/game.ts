@@ -1,5 +1,6 @@
 export enum TileType {
   WALL = 'WALL',
+  FLOOR = 'FLOOR',
   EXIT = 'EXIT',
   RIVER = 'RIVER',
   MOUNTAIN = 'MOUNTAIN',

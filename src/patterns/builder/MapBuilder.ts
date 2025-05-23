@@ -1,6 +1,7 @@
 import { GameMap, Position, Tile, TileType } from '../../types/game';
 import { EntityFactory } from '../factory/EntityFactory';
 import { MapLoader } from '../../services/MapLoader';
+import PerlinNoise2D from '../../services/PerlinNoise';
 
 /**
  * Builder for creating game maps with various configurations
@@ -109,22 +110,31 @@ export class MapBuilder {
     const tiles: Tile[][] = [];
     
     // Initialize with floor tiles
+    const perlin = new PerlinNoise2D(42);
+    const scaleNoise = 0.25;
     for (let y = 0; y < this.height; y++) {
       const row: Tile[] = [];
       for (let x = 0; x < this.width; x++) {
         const position: Position = { x, y };
-        let tileType: TileType = TileType.FLOOR;
+        let tileType: TileType;
         
+        const noise = perlin.noise(x * scaleNoise, y * scaleNoise) * 0.5 + 0.5; 
+
+        if (noise < 0.25) {
+          tileType = TileType.RIVER;
+        } else if (noise < 0.4) {
+          tileType = TileType.BEACH;
+        } else if (noise < 0.6) {
+          tileType = TileType.FIELD;
+        } else if (noise < 0.8) {
+          tileType = TileType.FOREST;
+        } else {
+          tileType = TileType.MOUNTAIN;
+        }
+
         // Add walls around the map border
         if (x === 0 || y === 0 || x === this.width - 1 || y === this.height - 1) {
           tileType = TileType.WALL;
-        }
-        
-        // Add some random walls based on density
-        if (x !== 0 && y !== 0 && x !== this.width - 1 && y !== this.height - 1) {
-          if (Math.random() < this.wallDensity) {
-            tileType = TileType.WALL;
-          }
         }
         
         row.push({

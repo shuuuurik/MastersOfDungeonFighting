@@ -29,6 +29,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       case TileType.MOUNTAIN:
         tileClass += ' mountain';
         break;
+      case TileType.FLOOR:
+        tileClass += ' floor';
+        break;
       case TileType.WALL:
         tileClass += ' wall';
         break;
