@@ -1,55 +1,62 @@
-# React + TypeScript + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
 # MastersOfDungeonFighting
+
+## Общие сведения о системе
+**MastersOfDungeonFighting** — это двухмерная roguelike‑игра в стиле фэнтези, реализованная на TypeScript и предназначенная для запуска в браузере. Основной идеей проекта является сочетание процедурной генерации подземелий, тактических пошаговых сражений и глубокой системы развития персонажа. Игровой мир наполнен разнообразными существами (скелеты, драконы, минотавры и др.), каждый из которых обладает уникальными характеристиками и поведением.
+
+## Architectural drivers
+
+**Функциональные требования**:
+* Генерация новых уровней при каждом запуске игры / спавне игрока
+* Реализация разных типов поведения мобов: агрессивное, пассивное, трусливое…
+* Пошаговое перемещение и разрешение боевых столкновений по клеткам
+* Система инвентаря, позволяющая надевать/снимать купленную экипировку, что влияет на характеристики
+* Механика опыта и уровней: начисление XP, рост характеристик при повышении
+* Временные эффекты (например, конфузия), влияющие на поведение мобов
+
+### Game design:
+
+**Карта**: 2d top-down клетки, случайная генерация (шум перлина), видимая область (поле 30х30), внешние границы (330х330 то есть 11х11 полей) 
+
+**Персонаж**: перемещение стрелочки, атака на на стрелочки в направление врага или ответная атака, подбор вещей просто наступить на них. При повышении уровня появляется возможность улучшить уровень экипировки.
+
+**Мобы**: случайная генерация в зоне при заходе на новое поле (нельзя выйти с карты пока не убил мобов).  Чем дальше поле от стартового тем в Манхэттенском расстоянии, тем больше хп и больше урона у мобов. Ограничение на количество мобов (10 штук условное). Всегда знают где персонаж. Мобы дропают опыт + деньги + иногда предметы (аптечку)
+
+**Предметы (инвентарь)**: 10 слотов. выбросить предмет из инвентаря (правой кнопкой мыши) 
+
+**Магазин** (меню после смерти): по уровню и количеству монет можно будет купить экипировку или улучшить
+
+## Роли и случаи использования
+
+**Основные роли**:
+
+* Игрок (Player): управляет главным героем, исследует уровни, вступает в бои
+* Система (System): автоматическая генерация уровней, управление AI, расчет боевой логики
+* Тестировщик (QA): пишет и запускает unit‑тесты, проверяет корректность алгоритмов, валидирует работу всей программы
+
+**Случаи использования**:
+1. Запуск игры: игрок запускает приложение, система генерирует первый уровень
+2. Исследование: игрок перемещается по клеткам, лутает монеты и предметы
+3. Столкновение с мобом: система определяет тип поведения, запускает AI‑стратегию
+4. Бой: два персонажа пытаются занять одну клетку, рассчитывается урон по атрибутам
+5. Смерть моба: игрок получает опыт, система проверяет, нужно ли повышение уровня
+6. Смерть игрока: игрок попадает в главное меню, где может потратить накопленные деньги на экипировку и запустить новую игру
+
+## Описание типичного пользователя
+
+1
+**Имя**: Артем, 23 года
+**Профессия**: студент, репетитор, начинающий разработчик
+**Интересы**: 3D-моделирование, изучение новых игр и исследование их механик
+**Опыт в играх**: знаток рогаликов (Hades, Enter the Gungeon, Bullets Per Minute), в некоторых даже собрал 100% ачивок в стиме
+
+2
+**Имя**: Дядя Вася, 34 года
+**Профессия**: заводчанин
+**Интересы**: видеоигры + пивко
+**Опыт в играх**: обычно играет с корешами в кс/доту, но иногда пробует новые жанры (рпг, сюжетки, рогалики)
+
+3
+**Имя**: Никита, 15 лет
+**Профессия**: геймер
+**Интересы**: индустрия видеоигр (новости, GamesCon, …)
+**Опыт в играх**: играет 24/7, скачивает и играет во все свежие новинки, перепроходит с друзьями кооп-игры
