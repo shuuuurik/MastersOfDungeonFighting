@@ -1,29 +1,61 @@
-import { Entity, EntityType, GameMap, GameState, Position } from '../types/game';
-import { MapGenerator } from './MapGenerator';
+import { 
+    EnemyCategory,
+  Entity, EntityType, GameMap, GameState, GameTheme, Position 
+} from '../types/game';
+import { MapBuilder } from '../patterns/builder/MapBuilder';
 import { EntityManager } from './EntityManager';
 import { BehaviorStrategy } from '../patterns/strategy/BehaviorStrategy';
+import { ConfusedBehavior } from '../patterns/decorator/BehaviorDecorator';
+import { ReplicatingEntity } from '../patterns/prototype/EntityPrototype';
+import { EnemyState, NormalState } from '../patterns/state/EnemyState';
 
 export class GameEngine {
-  private mapGenerator: MapGenerator;
+  private mapBuilder: MapBuilder;
   private entityManager: EntityManager;
   private state: GameState;
   private enemyBehaviors: Map<string, BehaviorStrategy> = new Map();
+  private enemyStates: Map<string, EnemyState> = new Map();
+  private originalBehaviors: Map<string, BehaviorStrategy> = new Map();
+  private replicatingEntities: Map<string, ReplicatingEntity> = new Map();
   
-  constructor() {
-    this.mapGenerator = new MapGenerator();
-    this.entityManager = new EntityManager();
+  constructor(theme: GameTheme = GameTheme.FANTASY) {
+    this.mapBuilder = new MapBuilder();
+    this.entityManager = new EntityManager(theme);
     
     // Initialize with default state
-    const map = this.mapGenerator.generateMap(20, 15);
-    const playerPosition = this.mapGenerator.findRandomEmptyPosition(map) || { x: 1, y: 1 };
+    const map = this.mapBuilder
+      .setWidth(30)
+      .setHeight(20)
+      .setWallDensity(0.3)
+      .setRoomCount(8)
+      .setEntityFactory(this.entityManager.getEntityFactory())
+      .build();
+    
+    const playerPosition = this.entityManager.findRandomEmptyPosition(map) || { x: 1, y: 1 };
     const player = this.entityManager.createPlayer(playerPosition);
     map.tiles[playerPosition.y][playerPosition.x].entity = player;
     
-    const enemies = this.entityManager.spawnEnemies(map, 5);
+    // Spawn different kinds of enemies
+    const enemies = [
+      ...this.entityManager.spawnEnemiesOfType(map, EnemyCategory.MELEE, 3),
+      ...this.entityManager.spawnEnemiesOfType(map, EnemyCategory.RANGED, 2),
+      ...this.entityManager.spawnEnemiesOfType(map, EnemyCategory.ELITE, 1),
+      ...this.entityManager.spawnEnemiesOfType(map, EnemyCategory.REPLICATING, 1)
+    ];
     
-    // Assign random behaviors to enemies
+    // Setup replicating entities
+    const replicatingEnemies = enemies.filter(e => e.canReplicate);
+    for (const enemy of replicatingEnemies) {
+      const replicator = new ReplicatingEntity(enemy, enemy.replicationChance || 0.2);
+      this.replicatingEntities.set(enemy.id, replicator);
+    }
+    
+    // Assign behaviors and initial states to enemies
     enemies.forEach(enemy => {
-      this.enemyBehaviors.set(enemy.id, this.entityManager.getBehaviorForEnemy());
+      const behavior = this.entityManager.getBehaviorForEnemy();
+      this.enemyBehaviors.set(enemy.id, behavior);
+      this.originalBehaviors.set(enemy.id, behavior);  // Store original behavior
+      this.enemyStates.set(enemy.id, new NormalState());
     });
     
     this.state = {
@@ -32,7 +64,9 @@ export class GameEngine {
       enemies,
       gameOver: false,
       victory: false,
-      turn: 0
+      turn: 0,
+      theme,
+      replicatingEntities: replicatingEnemies.map(e => e.id)
     };
   }
   
@@ -68,7 +102,7 @@ export class GameEngine {
       
       // Check if there's an enemy at the target position
       if (targetTile.entity && targetTile.entity.type === EntityType.ENEMY) {
-        this.combat(this.state.player, targetTile.entity);
+        this.performAttack(this.state.player, targetTile.entity);
       } else {
         // Move player to new position
         this.state.map.tiles[y][x].entity = null;
@@ -82,12 +116,69 @@ export class GameEngine {
         }
       }
       
-      // Process enemy turns after player's move
-      this.processEnemyTurns();
-      
-      // Increment turn counter
-      this.state.turn++;
+      // Process turn after player's move
+      this.processTurn();
     }
+  }
+  
+  performAttack(attacker: Entity, defender: Entity): void {
+    this.combat(attacker, defender);
+    
+    // Only process turn if the attacking entity is the player
+    if (attacker.type === EntityType.PLAYER) {
+      this.processTurn();
+    }
+  }
+  
+  confuseEnemyAt(position: Position, duration: number = 5): void {
+    if (this.state.gameOver) return;
+    
+    const { x, y } = position;
+    
+    // Check map boundaries
+    if (x < 0 || y < 0 || x >= this.state.map.width || y >= this.state.map.height) {
+      return;
+    }
+    
+    const tile = this.state.map.tiles[y][x];
+    if (!tile.entity || tile.entity.type !== EntityType.ENEMY) {
+      return; // No enemy at this position
+    }
+    
+    const enemy = tile.entity;
+    const originalBehavior = this.originalBehaviors.get(enemy.id);
+    
+    if (originalBehavior) {
+      // Apply the confused behavior decorator
+      const confusedBehavior = new ConfusedBehavior(originalBehavior, duration);
+      this.enemyBehaviors.set(enemy.id, confusedBehavior);
+      
+      // Mark entity as confused for UI
+      enemy.confused = true;
+      enemy.confusionTurns = duration;
+    }
+    
+    // Process turn after player's action
+    this.processTurn();
+  }
+  
+  processTurn(): void {
+    if (this.state.gameOver) return;
+    
+    // Process enemy turns
+    this.processEnemyTurns();
+    
+    // Handle replicating entities
+    this.processReplication();
+    
+    // Decrement confusion durations
+    this.processConfusionEffects();
+    
+    // Update enemy states
+    this.updateEnemyStates();
+    
+    // Increment turn counter
+    this.state.turn++;
   }
   
   private isValidMove(x: number, y: number): boolean {
@@ -109,6 +200,13 @@ export class GameEngine {
       // Get the behavior for this enemy
       const behavior = this.enemyBehaviors.get(enemy.id);
       if (!behavior) return;
+      
+      // Check if enemy is adjacent to player first (can attack)
+      if (this.isAdjacentToPlayer(enemy.position)) {
+        // Attack the player instead of moving
+        this.combat(enemy, this.state.player);
+        return; // Skip movement for this enemy
+      }
       
       // Calculate new position based on behavior
       const newPosition = behavior.execute(enemy, this.state.player, this.state.map);
@@ -132,6 +230,20 @@ export class GameEngine {
     this.state.enemies = this.state.enemies.filter(enemy => enemy.stats.health > 0);
   }
   
+  /**
+   * Check if a position is adjacent to the player
+   */
+  private isAdjacentToPlayer(position: Position): boolean {
+    const { x, y } = position;
+    const player = this.state.player;
+    
+    // Check if the position is orthogonally adjacent to the player
+    return (
+      (Math.abs(x - player.position.x) === 1 && y === player.position.y) ||
+      (Math.abs(y - player.position.y) === 1 && x === player.position.x)
+    );
+  }
+  
   private combat(attacker: Entity, defender: Entity): void {
     // Calculate damage
     const damage = Math.max(1, attacker.stats.attack - defender.stats.defense);
@@ -148,6 +260,12 @@ export class GameEngine {
         // Remove enemy from the map
         this.state.map.tiles[defender.position.y][defender.position.x].entity = null;
         
+        // Remove from replicating entities if applicable
+        if (this.replicatingEntities.has(defender.id)) {
+          this.replicatingEntities.delete(defender.id);
+          this.state.replicatingEntities = this.state.replicatingEntities.filter(id => id !== defender.id);
+        }
+        
         // Grant experience to player if player was the attacker
         if (attacker.type === EntityType.PLAYER) {
           this.giveExperienceToPlayer(defender.stats.level * 10);
@@ -157,6 +275,79 @@ export class GameEngine {
       // Handle player death
       if (defender.type === EntityType.PLAYER) {
         this.state.gameOver = true;
+      }
+    }
+  }
+  
+  private processReplication(): void {
+    // Process replication for all replicating entities
+    const newEntities: Entity[] = [];
+    
+    for (const [entityId, replicator] of this.replicatingEntities.entries()) {
+      // Find the entity in the state
+      const entity = this.state.enemies.find(e => e.id === entityId);
+      if (!entity) continue;
+      
+      // Try to replicate
+      const newEntity = replicator.tryReplicate(this.state.map);
+      if (newEntity) {
+        // Add to game state and map
+        newEntities.push(newEntity);
+        this.state.map.tiles[newEntity.position.y][newEntity.position.x].entity = newEntity;
+        
+        // Create a replicator for the new entity
+        const newReplicator = new ReplicatingEntity(
+          newEntity, 
+          entity.replicationChance ? entity.replicationChance * 0.8 : 0.15
+        );
+        this.replicatingEntities.set(newEntity.id, newReplicator);
+        
+        // Add to the state's replicating entities list
+        this.state.replicatingEntities.push(newEntity.id);
+        
+        // Assign behavior and state
+        const behavior = this.entityManager.getBehaviorForEnemy();
+        this.enemyBehaviors.set(newEntity.id, behavior);
+        this.originalBehaviors.set(newEntity.id, behavior);
+        this.enemyStates.set(newEntity.id, new NormalState());
+      }
+    }
+    
+    // Add new entities to the game state
+    if (newEntities.length > 0) {
+      this.state.enemies = [...this.state.enemies, ...newEntities];
+    }
+  }
+  
+  private processConfusionEffects(): void {
+    // Process confusion effects
+    for (const enemy of this.state.enemies) {
+      if (enemy.confused && enemy.confusionTurns !== undefined) {
+        enemy.confusionTurns--;
+        
+        // If confusion has worn off, revert to original behavior
+        if (enemy.confusionTurns <= 0) {
+          const originalBehavior = this.originalBehaviors.get(enemy.id);
+          if (originalBehavior) {
+            this.enemyBehaviors.set(enemy.id, originalBehavior);
+            enemy.confused = false;
+            enemy.confusionTurns = 0;
+          }
+        }
+      }
+    }
+  }
+  
+  private updateEnemyStates(): void {
+    // Update enemy states based on current conditions
+    for (const enemy of this.state.enemies) {
+      const currentState = this.enemyStates.get(enemy.id);
+      if (!currentState) continue;
+      
+      // Check for state transitions
+      const newState = currentState.shouldTransition(enemy);
+      if (newState) {
+        this.enemyStates.set(enemy.id, newState);
       }
     }
   }

@@ -7,11 +7,18 @@ interface StatusPanelProps {
 }
 
 const StatusPanel: React.FC<StatusPanelProps> = ({ gameState }) => {
-  const { player, gameOver, victory, turn } = gameState;
+  const { player, gameOver, victory, turn, theme, enemies } = gameState;
   const { stats } = player;
   
   const healthPercentage = (stats.health / stats.maxHealth) * 100;
   const experiencePercentage = (stats.experience / stats.experienceToNextLevel) * 100;
+  
+  // Count enemies by type
+  const enemyCounts = enemies.reduce((acc, enemy) => {
+    const category = enemy.category || 'unknown';
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
   
   return (
     <div className="status-panel">
@@ -21,6 +28,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState }) => {
         ) : (
           <h2>Turn: {turn}</h2>
         )}
+        <div className="theme-indicator">Theme: {theme}</div>
       </div>
       
       <div className="player-stats">
@@ -59,6 +67,28 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState }) => {
         <div className="stat-row">
           <span>Defense: {stats.defense}</span>
         </div>
+      </div>
+      
+      <div className="enemy-summary">
+        <h3>Enemies</h3>
+        <ul>
+          {Object.entries(enemyCounts).map(([type, count]) => (
+            <li key={type}>
+              {type}: {count}
+            </li>
+          ))}
+        </ul>
+        <div className="total-enemies">Total: {enemies.length}</div>
+      </div>
+      
+      <div className="game-help">
+        <h3>Help</h3>
+        <ul>
+          <li>WASD or Arrow keys: Move</li>
+          <li>Move into enemies to attack</li>
+          <li>Space: Skip turn</li>
+          <li>Watch out for replicating enemies!</li>
+        </ul>
       </div>
     </div>
   );

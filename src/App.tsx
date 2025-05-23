@@ -3,36 +3,48 @@ import './App.css';
 import GameBoard from './components/GameBoard';
 import StatusPanel from './components/StatusPanel';
 import { GameEngine } from './services/GameEngine';
-import { GameState } from './types/game';
+import { GameState, GameTheme } from './types/game';
+import { CommandInvoker, MoveCommand, WaitCommand } from './patterns/command/Command';
 
 function App() {
-  const [gameEngine, setGameEngine] = useState(() => new GameEngine());
+  const [gameEngine, setGameEngine] = useState(() => new GameEngine(GameTheme.FANTASY));
   const [gameState, setGameState] = useState<GameState>(gameEngine.getState());
   const [isGameRunning, setIsGameRunning] = useState(true);
+  const [commandInvoker] = useState(() => new CommandInvoker());
   
   // Handle keyboard input
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isGameRunning) return;
       
+      // Create the appropriate command based on key pressed
       switch (event.key) {
         case 'ArrowUp':
         case 'w':
-          gameEngine.movePlayer('up');
+          commandInvoker.addCommand(new MoveCommand(gameEngine, 'up'));
           break;
         case 'ArrowDown':
         case 's':
-          gameEngine.movePlayer('down');
+          commandInvoker.addCommand(new MoveCommand(gameEngine, 'down'));
           break;
         case 'ArrowLeft':
         case 'a':
-          gameEngine.movePlayer('left');
+          commandInvoker.addCommand(new MoveCommand(gameEngine, 'left'));
           break;
         case 'ArrowRight':
         case 'd':
-          gameEngine.movePlayer('right');
+          commandInvoker.addCommand(new MoveCommand(gameEngine, 'right'));
           break;
+        case ' ':
+          // Space bar to wait (skip turn)
+          commandInvoker.addCommand(new WaitCommand(gameEngine));
+          break;
+        default:
+          return; // Don't execute commands for other keys
       }
+      
+      // Execute the commands
+      commandInvoker.executeCommands();
       
       // Update the game state
       setGameState({...gameEngine.getState()});
@@ -48,10 +60,18 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [gameEngine, isGameRunning]);
+  }, [gameEngine, isGameRunning, commandInvoker]);
   
   const startNewGame = () => {
-    const newGameEngine = new GameEngine();
+    const newGameEngine = new GameEngine(gameState.theme);
+    setGameEngine(newGameEngine);
+    setGameState(newGameEngine.getState());
+    setIsGameRunning(true);
+  };
+  
+  const switchTheme = () => {
+    const newTheme = gameState.theme === GameTheme.FANTASY ? GameTheme.SCIFI : GameTheme.FANTASY;
+    const newGameEngine = new GameEngine(newTheme);
     setGameEngine(newGameEngine);
     setGameState(newGameEngine.getState());
     setIsGameRunning(true);
@@ -66,16 +86,20 @@ function App() {
         <StatusPanel gameState={gameState} />
       </div>
       
-      {!isGameRunning && (
-        <div className="game-controls">
+      <div className="game-controls">
+        {!isGameRunning && (
           <button onClick={startNewGame} className="new-game-button">
             Start New Game
           </button>
-        </div>
-      )}
+        )}
+        
+        <button onClick={switchTheme} className="theme-button">
+          Switch to {gameState.theme === GameTheme.FANTASY ? 'Sci-Fi' : 'Fantasy'} Theme
+        </button>
+      </div>
       
       <div className="controls-help">
-        <p>Use arrow keys or WASD to move. Attack enemies by moving into them.</p>
+        <p>Use arrow keys or WASD to move. Attack enemies by moving into them. Space to wait.</p>
       </div>
     </div>
   );

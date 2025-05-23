@@ -11,10 +11,17 @@
   text-align: center;
 }
 
+.theme-indicator {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-top: 0.5rem;
+}
+
 .player-stats {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .stat-row {
@@ -42,4 +49,37 @@
 
 .progress-bar-fill.exp {
   background-color: #ff9800;
+}
+
+.enemy-summary {
+  margin-bottom: 1.5rem;
+}
+
+.enemy-summary h3,
+.game-help h3 {
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #555;
+  padding-bottom: 0.3rem;
+}
+
+.enemy-summary ul,
+.game-help ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.enemy-summary li,
+.game-help li {
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.total-enemies {
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+.game-help {
+  font-size: 0.9rem;
 }

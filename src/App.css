@@ -77,6 +77,9 @@
 
 .game-controls {
   margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .new-game-button {
@@ -91,4 +94,19 @@
 
 .new-game-button:hover {
   background-color: #45a049;
+}
+
+.theme-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  background-color: #673ab7;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.theme-button:hover {
+  background-color: #5e35b1;
 }

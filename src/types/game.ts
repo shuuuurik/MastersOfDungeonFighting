@@ -25,6 +25,13 @@ export enum EntityType {
   ITEM = 'ITEM',
 }
 
+export enum EnemyCategory {
+  MELEE = 'MELEE',
+  RANGED = 'RANGED',
+  ELITE = 'ELITE',
+  REPLICATING = 'REPLICATING'
+}
+
 export interface Entity {
   id: string;
   type: EntityType;
@@ -32,6 +39,11 @@ export interface Entity {
   stats: GameStats;
   symbol: string;
   name: string;
+  category?: EnemyCategory; // Optional category for enemies
+  confused?: boolean; // Flag to indicate confused state
+  confusionTurns?: number; // Number of turns confusion remains
+  canReplicate?: boolean; // Flag for replicating entities
+  replicationChance?: number; // Chance of replication per turn
 }
 
 export interface Tile {
@@ -46,6 +58,11 @@ export interface GameMap {
   tiles: Tile[][];
 }
 
+export enum GameTheme {
+  FANTASY = 'FANTASY',
+  SCIFI = 'SCIFI',
+}
+
 export interface GameState {
   map: GameMap;
   player: Entity;
@@ -53,4 +70,6 @@ export interface GameState {
   gameOver: boolean;
   victory: boolean;
   turn: number;
+  theme: GameTheme;
+  replicatingEntities: string[]; // IDs of entities that can replicate
 }

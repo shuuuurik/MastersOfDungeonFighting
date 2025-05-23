@@ -1,0 +1,70 @@
+@startuml State Machine Diagram
+
+' Enemy State Machine
+state "Enemy States" as EnemyStates {
+  state "Normal" as Normal
+  state "Panic" as Panic
+  state "Tracking" as Tracking
+  state "Patrol" as Patrol
+  
+  Normal --> Panic : Health <= 30%
+  Panic --> Normal : Health > 50%
+  Normal --> Tracking : Player spotted
+  Tracking --> Patrol : Reached last known player position
+  Patrol --> Tracking : Player spotted
+  Patrol --> Normal : Patrol complete
+  Tracking --> Normal : Target too far
+  Panic --> Panic : Health still low
+}
+
+' Game State Machine
+state "Game States" as GameStates {
+  state "Init" as Init
+  state "PlayerTurn" as PlayerTurn
+  state "EnemyTurn" as EnemyTurn
+  state "Victory" as Victory
+  state "GameOver" as GameOver
+  
+  [*] --> Init
+  Init --> PlayerTurn : Game initialized
+  PlayerTurn --> EnemyTurn : Player moved
+  EnemyTurn --> PlayerTurn : All enemies moved
+  PlayerTurn --> Victory : Player reached exit
+  PlayerTurn --> GameOver : Player died
+  EnemyTurn --> GameOver : Player died
+  Victory --> [*]
+  GameOver --> [*]
+}
+
+' Enemy Behavior States
+state "Enemy Behaviors" as EnemyBehaviors {
+  state "Normal Behavior" as NormalBehavior
+  state "Confused Behavior" as ConfusedBehavior
+  
+  NormalBehavior --> ConfusedBehavior : Player uses confuse ability
+  ConfusedBehavior --> ConfusedBehavior : Turns remaining > 0
+  ConfusedBehavior --> NormalBehavior : Turns remaining = 0
+}
+
+' Entity Lifecycle States
+state "Entity Lifecycle" as EntityLifecycle {
+  state "Alive" as Alive
+  state "Dead" as Dead
+  
+  [*] --> Alive : Created
+  Alive --> Dead : Health <= 0
+  Dead --> [*] : Removed from game
+}
+
+' Replicating Entity States
+state "Replicating Entity" as ReplicatingEntity {
+  state "Ready" as Ready
+  state "Cooldown" as Cooldown
+  
+  [*] --> Ready : Created
+  Ready --> Ready : Failed replication attempt
+  Ready --> Cooldown : Successful replication
+  Cooldown --> Ready : After 1-3 turns
+}
+
+@enduml
