@@ -23,6 +23,27 @@
   background-color: #222;
 }
 
+.forest {
+  background-color: #4caf50;
+}
+
+.field {
+  background-color: #ffeb3b;
+}
+
+.mountain {
+  background-color: #9e9e9e;
+}
+
+.beach {
+  background-color: #03a9f4;
+}
+
+.river {
+  background-color: #005194;
+}
+
+
 .wall {
   background-color: #555;
 }

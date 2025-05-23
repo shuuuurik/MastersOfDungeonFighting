@@ -1,7 +1,11 @@
 export enum TileType {
-  FLOOR = 'FLOOR',
   WALL = 'WALL',
   EXIT = 'EXIT',
+  RIVER = 'RIVER',
+  MOUNTAIN = 'MOUNTAIN',
+  FOREST = 'FOREST',
+  FIELD = 'FIELD',
+  BEACH = 'BEACH',
 }
 
 export interface Position {

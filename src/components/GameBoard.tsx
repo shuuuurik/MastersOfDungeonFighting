@@ -14,8 +14,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
     let content = '';
     
     switch (tile.type) {
-      case TileType.FLOOR:
-        tileClass += ' floor';
+      case TileType.FIELD:
+        tileClass += ' field';
+        break;
+      case TileType.FOREST:
+        tileClass += ' forest';
+        break;
+      case TileType.BEACH:
+        tileClass += ' beach';
+        break;
+      case TileType.RIVER:
+        tileClass += ' river';
+        break;
+      case TileType.MOUNTAIN:
+        tileClass += ' mountain';
         break;
       case TileType.WALL:
         tileClass += ' wall';

@@ -189,7 +189,7 @@ export class GameEngine {
     
     // Check if tile is walkable (not a wall)
     const tile = this.state.map.tiles[y][x];
-    return tile.type !== 'WALL';
+    return tile.type !== 'WALL' && tile.type !== 'RIVER' && tile.type !== 'MOUNTAIN';
   }
   
   private processEnemyTurns(): void {
