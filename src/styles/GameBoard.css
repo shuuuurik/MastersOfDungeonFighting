@@ -1,0 +1,43 @@
+.game-board {
+  display: grid;
+  grid-gap: 0;
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 4/3;
+  background-color: #111;
+  border: 2px solid #444;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  position: relative;
+}
+
+.floor {
+  background-color: #222;
+}
+
+.wall {
+  background-color: #555;
+}
+
+.exit {
+  background-color: #263a15;
+  color: #8bc34a;
+}
+
+.entity {
+  color: white;
+}
+
+.player {
+  color: #4fc3f7;
+}
+
+.enemy {
+  color: #ff5252;
+}
