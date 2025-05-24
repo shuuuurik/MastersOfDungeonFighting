@@ -7,6 +7,10 @@ export enum TileType {
   FOREST = 'FOREST',
   FIELD = 'FIELD',
   BEACH = 'BEACH',
+  EXIT_UP = 'EXIT_UP',
+  EXIT_DOWN = 'EXIT_DOWN',
+  EXIT_RIGHT = 'EXIT_RIGHT',
+  EXIT_LEFT = 'EXIT_LEFT',
 }
 
 export interface Position {
@@ -57,10 +61,16 @@ export interface Tile {
   entity: Entity | null;
 }
 
-export interface GameMap {
+export interface GameField {
   width: number;
   height: number;
   tiles: Tile[][];
+}
+
+export interface GameMap {
+  width: number;
+  height: number;
+  fields: GameField[][];
 }
 
 export enum GameTheme {
@@ -70,6 +80,7 @@ export enum GameTheme {
 
 export interface GameState {
   map: GameMap;
+  currentField: GameField;
   player: Entity;
   enemies: Entity[];
   gameOver: boolean;

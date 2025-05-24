@@ -1,6 +1,6 @@
 import { 
     EnemyCategory,
-  Entity, EntityType, GameMap, GameState, GameTheme, Position 
+  Entity, EntityType, GameField, GameMap, GameState, GameTheme, Position 
 } from '../types/game';
 import { MapBuilder } from '../patterns/builder/MapBuilder';
 import { EntityManager } from './EntityManager';
@@ -23,24 +23,26 @@ export class GameEngine {
     this.entityManager = new EntityManager(theme);
     
     // Initialize with default state
-    const map = this.mapBuilder
-      .setWidth(30)
-      .setHeight(20)
-      .setWallDensity(0.3)
-      .setRoomCount(8)
+    const map : GameMap = this.mapBuilder
+      .setFieldWidth(30)
+      .setFieldHeight(30)
+      .setWidth(11)
+      .setHeight(11)
       .setEntityFactory(this.entityManager.getEntityFactory())
       .build();
+
+    const currentField : GameField = map.fields[Math.floor(map.height / 2)][Math.floor(map.width / 2)];
     
-    const playerPosition = this.entityManager.findRandomEmptyPosition(map) || { x: 1, y: 1 };
+    const playerPosition = this.entityManager.findRandomEmptyPosition(currentField) || { x: 1, y: 1 };
     const player = this.entityManager.createPlayer(playerPosition);
-    map.tiles[playerPosition.y][playerPosition.x].entity = player;
+    currentField.tiles[playerPosition.y][playerPosition.x].entity = player;
     
     // Spawn different kinds of enemies
     const enemies = [
-      ...this.entityManager.spawnEnemiesOfType(map, EnemyCategory.MELEE, 3),
-      ...this.entityManager.spawnEnemiesOfType(map, EnemyCategory.RANGED, 2),
-      ...this.entityManager.spawnEnemiesOfType(map, EnemyCategory.ELITE, 1),
-      ...this.entityManager.spawnEnemiesOfType(map, EnemyCategory.REPLICATING, 1)
+      ...this.entityManager.spawnEnemiesOfType(currentField, EnemyCategory.MELEE, 3),
+      ...this.entityManager.spawnEnemiesOfType(currentField, EnemyCategory.RANGED, 2),
+      ...this.entityManager.spawnEnemiesOfType(currentField, EnemyCategory.ELITE, 1),
+      ...this.entityManager.spawnEnemiesOfType(currentField, EnemyCategory.REPLICATING, 1)
     ];
     
     // Setup replicating entities
@@ -60,6 +62,7 @@ export class GameEngine {
     
     this.state = {
       map,
+      currentField,
       player,
       enemies,
       gameOver: false,
@@ -98,16 +101,16 @@ export class GameEngine {
     
     // Check if move is valid
     if (this.isValidMove(newX, newY)) {
-      const targetTile = this.state.map.tiles[newY][newX];
+      const targetTile = this.state.currentField.tiles[newY][newX];
       
       // Check if there's an enemy at the target position
       if (targetTile.entity && targetTile.entity.type === EntityType.ENEMY) {
         this.performAttack(this.state.player, targetTile.entity);
       } else {
         // Move player to new position
-        this.state.map.tiles[y][x].entity = null;
+        this.state.currentField.tiles[y][x].entity = null;
         this.state.player.position = { x: newX, y: newY };
-        this.state.map.tiles[newY][newX].entity = this.state.player;
+        this.state.currentField.tiles[newY][newX].entity = this.state.player;
         
         // Check if player reached the exit
         if (targetTile.type === 'EXIT') {
@@ -136,11 +139,11 @@ export class GameEngine {
     const { x, y } = position;
     
     // Check map boundaries
-    if (x < 0 || y < 0 || x >= this.state.map.width || y >= this.state.map.height) {
+    if (x < 0 || y < 0 || x >= this.state.currentField.width || y >= this.state.currentField.height) {
       return;
     }
     
-    const tile = this.state.map.tiles[y][x];
+    const tile = this.state.currentField.tiles[y][x];
     if (!tile.entity || tile.entity.type !== EntityType.ENEMY) {
       return; // No enemy at this position
     }
@@ -183,12 +186,12 @@ export class GameEngine {
   
   private isValidMove(x: number, y: number): boolean {
     // Check map boundaries
-    if (x < 0 || y < 0 || x >= this.state.map.width || y >= this.state.map.height) {
+    if (x < 0 || y < 0 || x >= this.state.currentField.width || y >= this.state.currentField.height) {
       return false;
     }
     
     // Check if tile is walkable (not a wall)
-    const tile = this.state.map.tiles[y][x];
+    const tile = this.state.currentField.tiles[y][x];
     return tile.type !== 'WALL' && tile.type !== 'RIVER' && tile.type !== 'MOUNTAIN';
   }
   
@@ -219,8 +222,8 @@ export class GameEngine {
           this.combat(enemy, this.state.player);
         } else {
           // Update enemy position on the map
-          this.state.map.tiles[enemy.position.y][enemy.position.x].entity = null;
-          this.state.map.tiles[newPosition.y][newPosition.x].entity = enemy;
+          this.state.currentField.tiles[enemy.position.y][enemy.position.x].entity = null;
+          this.state.currentField.tiles[newPosition.y][newPosition.x].entity = enemy;
           enemy.position = newPosition;
         }
       }
@@ -258,7 +261,7 @@ export class GameEngine {
       // Handle enemy death
       if (defender.type === EntityType.ENEMY) {
         // Remove enemy from the map
-        this.state.map.tiles[defender.position.y][defender.position.x].entity = null;
+        this.state.currentField.tiles[defender.position.y][defender.position.x].entity = null;
         
         // Remove from replicating entities if applicable
         if (this.replicatingEntities.has(defender.id)) {
@@ -293,7 +296,7 @@ export class GameEngine {
       if (newEntity) {
         // Add to game state and map
         newEntities.push(newEntity);
-        this.state.map.tiles[newEntity.position.y][newEntity.position.x].entity = newEntity;
+        this.state.currentField.tiles[newEntity.position.y][newEntity.position.x].entity = newEntity;
         
         // Create a replicator for the new entity
         const newReplicator = new ReplicatingEntity(

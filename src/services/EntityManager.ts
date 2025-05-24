@@ -1,6 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { 
-  Entity, EntityType, EnemyCategory, GameMap, GameStats, GameTheme, Position 
+  Entity, EntityType, EnemyCategory, GameStats, GameTheme, Position, 
+  GameField,
+  TileType,
+  Tile
 } from '../types/game';
 import { 
   AggressiveBehavior, BehaviorStrategy, FearfulBehavior, PassiveBehavior 
@@ -38,11 +41,11 @@ export class EntityManager {
     };
   }
   
-  spawnEnemiesOfType(map: GameMap, category: EnemyCategory, count: number): Entity[] {
+  spawnEnemiesOfType(field: GameField, category: EnemyCategory, count: number): Entity[] {
     const enemies: Entity[] = [];
     
     for (let i = 0; i < count; i++) {
-      const position = this.findRandomEmptyPosition(map);
+      const position = this.findRandomEmptyPosition(field);
       if (position) {
         // Create enemy using factory based on category
         let enemy: Entity;
@@ -68,7 +71,7 @@ export class EntityManager {
         enemy.category = category;
         
         // Place on map and add to array
-        map.tiles[position.y][position.x].entity = enemy;
+        field.tiles[position.y][position.x].entity = enemy;
         enemies.push(enemy);
       }
     }
@@ -76,13 +79,13 @@ export class EntityManager {
     return enemies;
   }
   
-  findRandomEmptyPosition(map: GameMap): Position | null {
+  findRandomEmptyPosition(field: GameField): Position | null {
     const candidates: Position[] = [];
     
-    for (let y = 0; y < map.height; y++) {
-      for (let x = 0; x < map.width; x++) {
-        const tile = map.tiles[y][x];
-        if (tile.type === 'FLOOR' && tile.entity === null) {
+    for (let y = 0; y < field.height; y++) {
+      for (let x = 0; x < field.width; x++) {
+        const tile: Tile | undefined = field.tiles[y] ? field.tiles[y][x] : undefined;
+        if (tile && ( (tile.type === TileType.FOREST || tile.type === TileType.FIELD) && tile.entity === null)) {
           candidates.push({ x, y });
         }
       }

@@ -7,7 +7,7 @@ interface GameBoardProps {
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
-  const { map } = gameState;
+  const { currentField } = gameState;
   
   const renderTile = (tile: Tile) => {
     let tileClass = 'tile';
@@ -29,6 +29,22 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       case TileType.MOUNTAIN:
         tileClass += ' mountain';
         break;
+      case TileType.EXIT_UP:
+        tileClass += ' exit-up';
+        content = '^';
+        break;
+      case TileType.EXIT_DOWN:
+        tileClass += ' exit-down';
+        content = 'v';
+        break;
+      case TileType.EXIT_LEFT:
+        tileClass += ' exit-left';
+        content = '<';
+        break;
+      case TileType.EXIT_RIGHT:
+        tileClass += ' exit-right';
+        content = '>';
+        break;
       case TileType.FLOOR:
         tileClass += ' floor';
         break;
@@ -45,7 +61,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
       tileClass += ` entity ${tile.entity.type.toLowerCase()}`;
       content = tile.entity.symbol;
     }
-    
     return (
       <div 
         key={`${tile.position.x}-${tile.position.y}`}
@@ -61,11 +76,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
     <div 
       className="game-board"
       style={{ 
-        gridTemplateColumns: `repeat(${map.width}, 1fr)`,
-        gridTemplateRows: `repeat(${map.height}, 1fr)`
+        gridTemplateColumns: `repeat(${currentField.width}, 1fr)`,
+        gridTemplateRows: `repeat(${currentField.height}, 1fr)`
       }}
     >
-      {map.tiles.flat().map(renderTile)}
+      {currentField.tiles.flat().map(renderTile)}
     </div>
   );
 };
