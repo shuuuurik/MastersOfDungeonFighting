@@ -1,0 +1,414 @@
+@startuml
+' Domain classes
+package "types" {
+  enum TileType {
+    FLOOR
+    WALL
+    EXIT
+  }
+  
+  class Position {
+    +x: number
+    +y: number
+  }
+  
+  class GameStats {
+    +health: number
+    +maxHealth: number
+    +attack: number
+    +defense: number
+    +experience: number
+    +level: number
+    +experienceToNextLevel: number
+  }
+  
+  enum EntityType {
+    PLAYER
+    ENEMY
+    ITEM
+  }
+  
+  enum EnemyCategory {
+    MELEE
+    RANGED
+    ELITE
+    REPLICATING
+  }
+  
+  class Entity {
+    +id: string
+    +type: EntityType
+    +position: Position
+    +stats: GameStats
+    +symbol: string
+    +name: string
+    +category?: EnemyCategory
+    +confused?: boolean
+    +confusionTurns?: number
+    +canReplicate?: boolean
+    +replicationChance?: number
+  }
+  
+  class Tile {
+    +type: TileType
+    +position: Position
+    +entity: Entity | null
+  }
+  
+  class GameMap {
+    +width: number
+    +height: number
+    +tiles: Tile[][]
+  }
+  
+  enum GameTheme {
+    FANTASY
+    SCIFI
+  }
+  
+  class GameState {
+    +map: GameMap
+    +player: Entity
+    +enemies: Entity[]
+    +gameOver: boolean
+    +victory: boolean
+    +turn: number
+    +theme: GameTheme
+    +replicatingEntities: string[]
+  }
+}
+
+' Services
+package "services" {
+  class GameEngine {
+    -mapBuilder: MapBuilder
+    -entityManager: EntityManager
+    -state: GameState
+    -enemyBehaviors: Map<string, BehaviorStrategy>
+    -enemyStates: Map<string, EnemyState>
+    -originalBehaviors: Map<string, BehaviorStrategy>
+    -replicatingEntities: Map<string, ReplicatingEntity>
+    +constructor(theme?: GameTheme)
+    +getState(): GameState
+    +movePlayer(direction: string): void
+    +performAttack(attacker: Entity, defender: Entity): void
+    +confuseEnemyAt(position: Position, duration: number): void
+    +processTurn(): void
+    -isValidMove(x: number, y: number): boolean
+    -processEnemyTurns(): void
+    -combat(attacker: Entity, defender: Entity): void
+    -processReplication(): void
+    -processConfusionEffects(): void
+    -updateEnemyStates(): void
+    -giveExperienceToPlayer(amount: number): void
+    -levelUpPlayer(): void
+    -isAdjacentToPlayer(position: Position): boolean
+  }
+  
+  class EntityManager {
+    -entityFactory: EntityFactory
+    -mapGenerator: MapGenerator
+    +constructor(theme: GameTheme)
+    +getEntityFactory(): EntityFactory
+    +createPlayer(position: Position): Entity
+    +spawnEnemiesOfType(map: GameMap, type: EnemyCategory, count: number): Entity[]
+    +findRandomEmptyPosition(map: GameMap): Position
+    +getBehaviorForEnemy(): BehaviorStrategy
+  }
+  
+  class MapGenerator {
+    +generateMap(width: number, height: number): GameMap
+    +findRandomEmptyPosition(map: GameMap): Position | null
+  }
+  
+  class MapLoader {
+    +loadMapFromFile(filepath: string): GameMap
+  }
+}
+
+' Patterns
+package "patterns" {
+  ' Strategy Pattern
+  package "strategy" {
+    interface BehaviorStrategy {
+      +execute(entity: Entity, player: Entity, gameMap: GameMap): Position
+    }
+    
+    class AggressiveBehavior {
+      +execute(entity: Entity, player: Entity, gameMap: GameMap): Position
+      -isValidMove(x: number, y: number, gameMap: GameMap): boolean
+    }
+    
+    class PassiveBehavior {
+      +execute(entity: Entity, player: Entity, gameMap: GameMap): Position
+    }
+    
+    class FearfulBehavior {
+      +execute(entity: Entity, player: Entity, gameMap: GameMap): Position
+      -isValidMove(x: number, y: number, gameMap: GameMap): boolean
+    }
+  }
+  
+  ' Decorator Pattern
+  package "decorator" {
+    abstract class BehaviorDecorator {
+      #wrappedBehavior: BehaviorStrategy
+      +constructor(behavior: BehaviorStrategy)
+      +execute(entity: Entity, player: Entity, gameMap: GameMap): Position
+    }
+    
+    class ConfusedBehavior {
+      -turnsRemaining: number
+      +constructor(behavior: BehaviorStrategy, duration: number)
+      +execute(entity: Entity, player: Entity, gameMap: GameMap): Position
+      -isValidMove(x: number, y: number, gameMap: GameMap): boolean
+      +isConfused(): boolean
+      +getTurnsRemaining(): number
+    }
+  }
+  
+  ' Builder Pattern
+  package "builder" {
+    class MapBuilder {
+      -width: number
+      -height: number
+      -wallDensity: number
+      -mapFile: string | null
+      -entityFactory: EntityFactory | null
+      -roomCount: number
+      -corridorDensity: number
+      -randomSeed: number | null
+      -mapLoader: MapLoader
+      +constructor()
+      +setWidth(width: number): MapBuilder
+      +setHeight(height: number): MapBuilder
+      +setWallDensity(density: number): MapBuilder
+      +setMapFile(filepath: string): MapBuilder
+      +setEntityFactory(factory: EntityFactory): MapBuilder
+      +setRoomCount(count: number): MapBuilder
+      +setCorridorDensity(density: number): MapBuilder
+      +setRandomSeed(seed: number): MapBuilder
+      +build(): GameMap
+      -generateMap(): GameMap
+      -generateRooms(tiles: Tile[][]): void
+      -placeExit(tiles: Tile[][]): void
+    }
+  }
+  
+  ' Abstract Factory Pattern
+  package "factory" {
+    interface EntityFactory {
+      +createMelee(position: Position, level?: number): Entity
+      +createRanged(position: Position, level?: number): Entity
+      +createElite(position: Position, level?: number): Entity
+      +createReplicating(position: Position, level?: number): Entity
+    }
+    
+    class FantasyEntityFactory {
+      +createMelee(position: Position, level?: number): Entity
+      +createRanged(position: Position, level?: number): Entity
+      +createElite(position: Position, level?: number): Entity
+      +createReplicating(position: Position, level?: number): Entity
+    }
+    
+    class SciFiEntityFactory {
+      +createMelee(position: Position, level?: number): Entity
+      +createRanged(position: Position, level?: number): Entity
+      +createElite(position: Position, level?: number): Entity
+      +createReplicating(position: Position, level?: number): Entity
+    }
+  }
+  
+  ' Prototype Pattern
+  package "prototype" {
+    interface EntityPrototype {
+      +clone(): Entity
+      +tryReplicate(gameMap: GameMap): Entity | null
+    }
+    
+    class ReplicatingEntity {
+      -entity: Entity
+      -replicationChance: number
+      +constructor(entity: Entity, replicationChance?: number)
+      +clone(): Entity
+      +tryReplicate(gameMap: GameMap): Entity | null
+      -getAdjacentPositions(position: Position): Position[]
+      -isValidPosition(position: Position, gameMap: GameMap): boolean
+      +getEntity(): Entity
+      +getReplicationChance(): number
+      +setReplicationChance(chance: number): void
+    }
+  }
+  
+  ' Command Pattern
+  package "command" {
+    interface Command {
+      +execute(): void
+    }
+    
+    class MoveCommand {
+      -gameEngine: GameEngine
+      -direction: string
+      +constructor(gameEngine: GameEngine, direction: string)
+      +execute(): void
+    }
+    
+    class AttackCommand {
+      -gameEngine: GameEngine
+      -attacker: Entity
+      -target: Entity
+      +constructor(gameEngine: GameEngine, attacker: Entity, target: Entity)
+      +execute(): void
+    }
+    
+    class ConfuseCommand {
+      -gameEngine: GameEngine
+      -targetPosition: Position
+      -duration: number
+      +constructor(gameEngine: GameEngine, targetPosition: Position, duration?: number)
+      +execute(): void
+    }
+    
+    class WaitCommand {
+      -gameEngine: GameEngine
+      +constructor(gameEngine: GameEngine)
+      +execute(): void
+    }
+    
+    class CommandInvoker {
+      -commands: Command[]
+      +addCommand(command: Command): void
+      +executeCommands(): void
+    }
+  }
+  
+  ' State Pattern
+  package "state" {
+    interface EnemyState {
+      +getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position
+      +shouldTransition(entity: Entity): EnemyState | null
+      +getName(): string
+    }
+    
+    class NormalState {
+      -panicHealthThreshold: number
+      +constructor(panicHealthThreshold?: number)
+      +getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position
+      +shouldTransition(entity: Entity): EnemyState | null
+      +getName(): string
+    }
+    
+    class PanicState {
+      -fearfulStrategy: BehaviorStrategy
+      -recoveryThreshold: number
+      +constructor(recoveryThreshold?: number)
+      +getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position
+      +shouldTransition(entity: Entity): EnemyState | null
+      +getName(): string
+    }
+    
+    class TrackingState {
+      -targetPosition: Position
+      -giveUpDistance: number
+      -aggressiveStrategy: BehaviorStrategy
+      +constructor(targetPosition: Position, giveUpDistance?: number)
+      +getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position
+      +shouldTransition(entity: Entity): EnemyState | null
+      +getName(): string
+    }
+    
+    class PatrolState {
+      -centerPosition: Position
+      -patrolRadius: number
+      -patrolPoints: Position[]
+      -currentPointIndex: number
+      -stepsAtCurrentPoint: number
+      -maxStepsAtPoint: number
+      +constructor(centerPosition: Position, patrolRadius?: number)
+      -generatePatrolPoints(): void
+      +getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position
+      -isValidMove(x: number, y: number, gameMap: GameMap): boolean
+      +shouldTransition(entity: Entity): EnemyState | null
+      +getName(): string
+    }
+  }
+}
+
+' UI Components
+package "components" {
+  class GameBoard {
+    +gameState: GameState
+    +render(): JSX.Element
+  }
+  
+  class StatusPanel {
+    +gameState: GameState
+    +render(): JSX.Element
+  }
+  
+  class App {
+    -gameEngine: GameEngine
+    -gameState: GameState
+    -isGameRunning: boolean
+    -commandInvoker: CommandInvoker
+    +handleKeyDown(event: KeyboardEvent): void
+    +startNewGame(): void
+    +render(): JSX.Element
+  }
+}
+
+' Relationships
+EntityType -- Entity
+EnemyCategory -- Entity
+Position -- Entity
+Position -- Tile
+GameStats -- Entity
+TileType -- Tile
+Tile -- GameMap
+Entity -- GameState
+GameMap -- GameState
+GameTheme -- GameState
+
+BehaviorStrategy <|.. AggressiveBehavior
+BehaviorStrategy <|.. PassiveBehavior
+BehaviorStrategy <|.. FearfulBehavior
+BehaviorStrategy <|.. BehaviorDecorator
+BehaviorDecorator <|-- ConfusedBehavior
+
+EntityFactory <|.. FantasyEntityFactory
+EntityFactory <|.. SciFiEntityFactory
+
+EntityPrototype <|.. ReplicatingEntity
+
+Command <|.. MoveCommand
+Command <|.. AttackCommand
+Command <|.. ConfuseCommand
+Command <|.. WaitCommand
+Command -- CommandInvoker
+
+EnemyState <|.. NormalState
+EnemyState <|.. PanicState
+EnemyState <|.. TrackingState
+EnemyState <|.. PatrolState
+
+GameEngine -- GameState
+GameEngine -- MapBuilder
+GameEngine -- EntityManager
+GameEngine -- BehaviorStrategy
+GameEngine -- EnemyState
+GameEngine -- ReplicatingEntity
+
+EntityManager -- EntityFactory
+EntityManager -- BehaviorStrategy
+EntityManager -- Entity
+EntityManager -- MapGenerator
+
+MapBuilder -- MapLoader
+MapBuilder -- EntityFactory
+MapBuilder -- GameMap
+
+App -- GameEngine
+App -- CommandInvoker
+App -- GameBoard
+App -- StatusPanel
+@enduml
