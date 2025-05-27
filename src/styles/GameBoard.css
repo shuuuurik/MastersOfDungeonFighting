@@ -15,12 +15,8 @@
   font-weight: bold;
   font-size: 1.2rem;
   position: relative;
-  width: 20px;
-  height: 20px;
-}
-
-.floor {
-  background-color: #222;
+  width: 30px;
+  height: 30px;
 }
 
 .forest {
@@ -43,14 +39,8 @@
   background-color: #005194;
 }
 
-
 .wall {
   background-color: #555;
-}
-
-.exit {
-  background-color: #263a15;
-  color: #8bc34a;
 }
 
 .entity {

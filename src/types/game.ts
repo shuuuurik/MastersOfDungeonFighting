@@ -1,7 +1,5 @@
 export enum TileType {
   WALL = 'WALL',
-  FLOOR = 'FLOOR',
-  EXIT = 'EXIT',
   RIVER = 'RIVER',
   MOUNTAIN = 'MOUNTAIN',
   FOREST = 'FOREST',
@@ -64,6 +62,7 @@ export interface Tile {
 export interface GameField {
   width: number;
   height: number;
+  position: Position; // Position of the field in the overall map
   tiles: Tile[][];
 }
 

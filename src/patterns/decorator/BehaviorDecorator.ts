@@ -1,18 +1,19 @@
 import { BehaviorStrategy } from '../strategy/BehaviorStrategy';
-import { Entity, GameMap, Position } from '../../types/game';
+import { Entity, GameField, Position } from '../../types/game';
 
 /**
  * Base class for decorating behaviors with additional functionality
  */
-export abstract class BehaviorDecorator implements BehaviorStrategy {
+export abstract class BehaviorDecorator extends BehaviorStrategy {
   protected wrappedBehavior: BehaviorStrategy;
   
   constructor(behavior: BehaviorStrategy) {
+    super();
     this.wrappedBehavior = behavior;
   }
   
-  execute(entity: Entity, player: Entity, gameMap: GameMap): Position {
-    return this.wrappedBehavior.execute(entity, player, gameMap);
+  execute(entity: Entity, player: Entity, gameField: GameField): Position {
+    return this.wrappedBehavior.execute(entity, player, gameField);
   }
 }
 
@@ -28,10 +29,10 @@ export class ConfusedBehavior extends BehaviorDecorator {
     this.turnsRemaining = duration;
   }
   
-  execute(entity: Entity, player: Entity, gameMap: GameMap): Position {
+  execute(entity: Entity, player: Entity, gameField: GameField): Position {
     // If confusion has worn off, revert to original behavior
     if (this.turnsRemaining <= 0) {
-      return this.wrappedBehavior.execute(entity, player, gameMap);
+      return this.wrappedBehavior.execute(entity, player, gameField);
     }
     
     // Decrement the remaining turns
@@ -52,7 +53,7 @@ export class ConfusedBehavior extends BehaviorDecorator {
     ];
     
     // Filter out invalid moves
-    const validMoves = possibleMoves.filter(pos => this.isValidMove(pos.x, pos.y, gameMap));
+    const validMoves = possibleMoves.filter(pos => BehaviorStrategy.isValidMove(pos.x, pos.y, gameField));
     
     // If no valid moves, stay in place
     if (validMoves.length === 0) {
@@ -62,17 +63,6 @@ export class ConfusedBehavior extends BehaviorDecorator {
     // Pick a random valid move
     const randomIndex = Math.floor(Math.random() * validMoves.length);
     return validMoves[randomIndex];
-  }
-  
-  private isValidMove(x: number, y: number, gameMap: GameMap): boolean {
-    // Check map boundaries
-    if (x < 0 || y < 0 || x >= gameMap.width || y >= gameMap.height) {
-      return false;
-    }
-    
-    // Check if tile is walkable (not a wall) and has no entity
-    const tile = gameMap.tiles[y][x];
-    return tile.type !== 'WALL' && tile.entity === null;
   }
   
   /**

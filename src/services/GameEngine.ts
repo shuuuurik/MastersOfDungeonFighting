@@ -1,6 +1,7 @@
 import { 
     EnemyCategory,
-  Entity, EntityType, GameField, GameMap, GameState, GameTheme, Position 
+  Entity, EntityType, GameField, GameMap, GameState, GameTheme, Position, 
+  TileType
 } from '../types/game';
 import { MapBuilder } from '../patterns/builder/MapBuilder';
 import { EntityManager } from './EntityManager';
@@ -100,7 +101,7 @@ export class GameEngine {
     }
     
     // Check if move is valid
-    if (this.isValidMove(newX, newY)) {
+    if (this.isValidMovePlayer(newX, newY)) {
       const targetTile = this.state.currentField.tiles[newY][newX];
       
       // Check if there's an enemy at the target position
@@ -111,12 +112,24 @@ export class GameEngine {
         this.state.currentField.tiles[y][x].entity = null;
         this.state.player.position = { x: newX, y: newY };
         this.state.currentField.tiles[newY][newX].entity = this.state.player;
-        
-        // Check if player reached the exit
-        if (targetTile.type === 'EXIT') {
-          this.state.victory = true;
-          this.state.gameOver = true;
-        }
+
+        // if (targetTile.type === TileType.EXIT_UP) {
+        //   // Handle exit up logic
+        //   this.state.currentField = this.state.map.fields[Math.max(0, Math.floor(this.state.currentField.position.y - 1))][this.state.currentField.position.x];
+        //   this.state.player.position = { x: this.state.player.position.x, y: this.state.currentField.height - 2 }; // Reset player position on new field
+        // } else if (targetTile.type === TileType.EXIT_DOWN) {
+        //   // Handle exit down logic
+        //   this.state.currentField = this.state.map.fields[Math.min(this.state.map.height - 1, Math.floor(this.state.currentField.position.y + 1))][this.state.currentField.position.x];
+        //   this.state.player.position = { x: this.state.player.position.x, y: 1}; // Reset player position on new field
+        // } else if (targetTile.type === TileType.EXIT_LEFT) {
+        //   // Handle exit left logic
+        //   this.state.currentField = this.state.map.fields[this.state.currentField.position.y][Math.max(0, Math.floor(this.state.currentField.position.x - 1))];
+        //   this.state.player.position = { x: this.state.currentField.width - 2, y: this.state.player.position.y }; // Reset player position on new field
+        // } else if (targetTile.type === TileType.EXIT_RIGHT) {
+        //   // Handle exit right logic
+        //   this.state.currentField = this.state.map.fields[this.state.currentField.position.y][Math.min(this.state.map.width - 1, Math.floor(this.state.currentField.position.x + 1))];
+        //   this.state.player.position = { x: 1, y: this.state.player.position.y }; // Reset player position on new field
+        // }
       }
       
       // Process turn after player's move
@@ -184,7 +197,7 @@ export class GameEngine {
     this.state.turn++;
   }
   
-  private isValidMove(x: number, y: number): boolean {
+  private isValidMovePlayer(x: number, y: number): boolean {
     // Check map boundaries
     if (x < 0 || y < 0 || x >= this.state.currentField.width || y >= this.state.currentField.height) {
       return false;
@@ -212,7 +225,7 @@ export class GameEngine {
       }
       
       // Calculate new position based on behavior
-      const newPosition = behavior.execute(enemy, this.state.player, this.state.map);
+      const newPosition = behavior.execute(enemy, this.state.player, this.state.currentField);
       
       // If position changed, update the entity on the map
       if (newPosition.x !== enemy.position.x || newPosition.y !== enemy.position.y) {
@@ -292,7 +305,7 @@ export class GameEngine {
       if (!entity) continue;
       
       // Try to replicate
-      const newEntity = replicator.tryReplicate(this.state.map);
+      const newEntity = replicator.tryReplicate(this.state.currentField);
       if (newEntity) {
         // Add to game state and map
         newEntities.push(newEntity);

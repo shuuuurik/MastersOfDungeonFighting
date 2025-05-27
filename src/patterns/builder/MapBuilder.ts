@@ -109,19 +109,14 @@ export class MapBuilder {
         const field: GameField = {
           width: this.fieldWidth,
           height: this.fieldHeight,
+          position: { x, y },
           tiles: this.generateTiles(x, y)
         };
-
-        if (x === Math.floor(this.width / 2) && y === Math.floor(this.height / 2)) {
-          // Center field is the main field, can be used for special purposes
-          this.placeExit(field.tiles);
-        }
         
         if (!fields[y]) {
           fields[y] = [];
         }
         fields[y][x] = field;
-        console.log(`Generated field at (${x}, ${y}) with size ${this.fieldWidth}x${this.fieldHeight}`);
       }
     }
     
@@ -206,32 +201,5 @@ export class MapBuilder {
 
     return tiles;
   }
-  
-  /**
-   * Place an exit in the map
-   */
-  private placeExit(tiles: Tile[][]): void {
-    // Try to place the exit in the last room or in a random walkable location
-    let exitPlaced = false;
-    let attempts = 0;
-    
-    while (!exitPlaced && attempts < 100) {
-      const x = Math.floor(Math.random() * (this.width - 2)) + 1;
-      const y = Math.floor(Math.random() * (this.height - 2)) + 1;
-      
-      if (tiles[y][x].type === TileType.FIELD) {
-        tiles[y][x].type = TileType.EXIT;
-        exitPlaced = true;
-      }
-      
-      attempts++;
-    }
-    
-    // Fallback if no exit was placed
-    if (!exitPlaced) {
-      const centerX = Math.floor(this.width / 2);
-      const centerY = Math.floor(this.height / 2);
-      tiles[centerY][centerX].type = TileType.EXIT;
-    }
-  }
+
 }

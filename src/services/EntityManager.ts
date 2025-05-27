@@ -8,7 +8,7 @@ import {
 import { 
   AggressiveBehavior, BehaviorStrategy, FearfulBehavior, PassiveBehavior 
 } from '../patterns/strategy/BehaviorStrategy';
-import { EntityFactory, FantasyEntityFactory, SciFiEntityFactory } from '../patterns/factory/EntityFactory';
+import { EntityFactory, FantasyEntityFactory, ForestEntityFactory } from '../patterns/factory/EntityFactory';
 
 export class EntityManager {
   private entityFactory: EntityFactory;
@@ -17,7 +17,7 @@ export class EntityManager {
     // Create the appropriate factory based on theme
     this.entityFactory = theme === GameTheme.FANTASY 
       ? new FantasyEntityFactory() 
-      : new SciFiEntityFactory();
+      : new ForestEntityFactory();
   }
   
   createPlayer(position: Position): Entity {
@@ -36,7 +36,7 @@ export class EntityManager {
       type: EntityType.PLAYER,
       position,
       stats: playerStats,
-      symbol: '@',
+      symbol: '🤡',
       name: 'Player'
     };
   }
@@ -85,7 +85,7 @@ export class EntityManager {
     for (let y = 0; y < field.height; y++) {
       for (let x = 0; x < field.width; x++) {
         const tile: Tile | undefined = field.tiles[y] ? field.tiles[y][x] : undefined;
-        if (tile && ( (tile.type === TileType.FOREST || tile.type === TileType.FIELD) && tile.entity === null)) {
+        if (tile && ( (tile.type === TileType.FOREST || tile.type === TileType.FIELD || tile.type === TileType.BEACH) && tile.entity === null)) {
           candidates.push({ x, y });
         }
       }

@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Entity, GameMap, Position } from '../../types/game';
+import { Entity, GameField, GameMap, Position, TileType } from '../../types/game';
 
 /**
  * Interface for objects that can clone themselves
  */
 export interface EntityPrototype {
   clone(): Entity;
-  tryReplicate(gameMap: GameMap): Entity | null;
+  tryReplicate(gameField: GameField): Entity | null;
 }
 
 /**
@@ -36,7 +36,7 @@ export class ReplicatingEntity implements EntityPrototype {
    * Attempt to replicate in a random adjacent cell
    * @returns A new entity if replication was successful, null otherwise
    */
-  tryReplicate(gameMap: GameMap): Entity | null {
+  tryReplicate(gameField: GameField): Entity | null {
     // Check if replication should occur
     if (Math.random() > this.replicationChance) {
       return null;
@@ -44,7 +44,7 @@ export class ReplicatingEntity implements EntityPrototype {
     
     // Find a valid adjacent cell for replication
     const adjacentPositions = this.getAdjacentPositions(this.entity.position);
-    const validPositions = adjacentPositions.filter(pos => this.isValidPosition(pos, gameMap));
+    const validPositions = adjacentPositions.filter(pos => this.isValidPosition(pos, gameField));
     
     if (validPositions.length === 0) {
       return null; // No valid positions to replicate to
@@ -86,17 +86,24 @@ export class ReplicatingEntity implements EntityPrototype {
   /**
    * Check if a position is valid for replication
    */
-  private isValidPosition(position: Position, gameMap: GameMap): boolean {
+  private isValidPosition(position: Position, gameField: GameField): boolean {
     const { x, y } = position;
     
     // Check if position is within map bounds
-    if (x < 0 || y < 0 || x >= gameMap.width || y >= gameMap.height) {
+    if (x < 0 || y < 0 || x >= gameField.width || y >= gameField.height) {
       return false;
     }
     
     // Check if position is walkable and empty
-    const tile = gameMap.tiles[y][x];
-    return tile.type !== 'WALL' && tile.entity === null;
+    const tile = gameField.tiles[y][x];
+    return tile.type !== TileType.MOUNTAIN 
+      && tile.type !== TileType.RIVER 
+      && tile.type !== TileType.WALL
+      && tile.type !== TileType.EXIT_UP
+      && tile.type !== TileType.EXIT_RIGHT
+      && tile.type !== TileType.EXIT_DOWN
+      && tile.type !== TileType.EXIT_LEFT
+      && tile.entity === null;
   }
   
   /**

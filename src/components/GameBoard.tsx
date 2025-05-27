@@ -25,41 +25,36 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         break;
       case TileType.RIVER:
         tileClass += ' river';
+        content = '🌊';
         break;
       case TileType.MOUNTAIN:
         tileClass += ' mountain';
+        content = '⛰️';
         break;
       case TileType.EXIT_UP:
         tileClass += ' exit-up';
-        content = '^';
+        content = '🔼'; // Up arrow
         break;
       case TileType.EXIT_DOWN:
         tileClass += ' exit-down';
-        content = 'v';
+        content = '🔽'; // Down arrow
         break;
       case TileType.EXIT_LEFT:
         tileClass += ' exit-left';
-        content = '<';
+        content = '◀️'; // Left arrow
         break;
       case TileType.EXIT_RIGHT:
         tileClass += ' exit-right';
-        content = '>';
-        break;
-      case TileType.FLOOR:
-        tileClass += ' floor';
+        content = '▶️'; // Right arrow
         break;
       case TileType.WALL:
         tileClass += ' wall';
         break;
-      case TileType.EXIT:
-        tileClass += ' exit';
-        content = '>';
-        break;
     }
     
     if (tile.entity) {
-      tileClass += ` entity ${tile.entity.type.toLowerCase()}`;
       content = tile.entity.symbol;
+      tileClass = 'tile entity ' + tile.entity.type.toLowerCase();
     }
     return (
       <div 
