@@ -15,10 +15,12 @@ export interface EntityPrototype {
 export class ReplicatingEntity implements EntityPrototype {
   private entity: Entity;
   private replicationChance: number;
+  private replicationCount: number;
   
-  constructor(entity: Entity, replicationChance: number = 0.2) {
+  constructor(entity: Entity, replicationChance: number = 0.2, replicationCount: number = 10) {
     this.entity = entity;
     this.replicationChance = replicationChance;
+    this.replicationCount = replicationCount;
   }
   
   /**
@@ -38,7 +40,7 @@ export class ReplicatingEntity implements EntityPrototype {
    */
   tryReplicate(gameField: GameField): Entity | null {
     // Check if replication should occur
-    if (Math.random() > this.replicationChance) {
+    if (Math.random() > this.replicationChance || this.replicationCount <= 0) {
       return null;
     }
     
@@ -120,6 +122,14 @@ export class ReplicatingEntity implements EntityPrototype {
     return this.replicationChance;
   }
   
+
+  /**
+   * Get the replication count
+   */
+  getReplicationCount(): number {
+    return this.replicationCount;
+  }
+
   /**
    * Set the replication chance
    */

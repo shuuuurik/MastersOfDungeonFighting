@@ -51,6 +51,7 @@ export interface Entity {
   confusionTurns?: number; // Number of turns confusion remains
   canReplicate?: boolean; // Flag for replicating entities
   replicationChance?: number; // Chance of replication per turn
+  replicationCount?: number; // Count of replication less
 }
 
 export interface Tile {

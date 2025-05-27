@@ -1,7 +1,6 @@
 import { 
     EnemyCategory,
-  Entity, EntityType, GameField, GameMap, GameState, GameTheme, Position, 
-  TileType
+  Entity, EntityType, GameField, GameMap, GameState, GameTheme, Position
 } from '../types/game';
 import { MapBuilder } from '../patterns/builder/MapBuilder';
 import { EntityManager } from './EntityManager';
@@ -314,7 +313,8 @@ export class GameEngine {
         // Create a replicator for the new entity
         const newReplicator = new ReplicatingEntity(
           newEntity, 
-          entity.replicationChance ? entity.replicationChance * 0.8 : 0.15
+          entity.replicationChance ? entity.replicationChance * 0.8 : 0.15,
+          entity.replicationCount ? entity.replicationCount - 1 : 0,
         );
         this.replicatingEntities.set(newEntity.id, newReplicator);
         
