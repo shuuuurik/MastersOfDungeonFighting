@@ -48,7 +48,7 @@ export class GameEngine {
     // Setup replicating entities
     const replicatingEnemies = enemies.filter(e => e.canReplicate);
     for (const enemy of replicatingEnemies) {
-      const replicator = new ReplicatingEntity(enemy, enemy.replicationChance || 0.2);
+      const replicator = new ReplicatingEntity(enemy, enemy.replicationChance || 0.2, enemy.replicationCount || 20);
       this.replicatingEntities.set(enemy.id, replicator);
     }
     
