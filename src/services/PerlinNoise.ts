@@ -4,7 +4,7 @@ export default class PerlinNoise2D {
     private static permutation: number[] = [...Array(256)].map((_, i) => i);
     private static p: number[] = [...PerlinNoise2D.permutation, ...PerlinNoise2D.permutation];
     private seed: number;
-    
+
     constructor(seed: number = Random.uniform()) {
         this.seed = seed;
         this.shufflePermutation();
@@ -65,5 +65,21 @@ export default class PerlinNoise2D {
         const lerpX2 = this.lerp(u, gradAB, gradBB);
 
         return this.lerp(v, lerpX1, lerpX2);
+    }
+
+    public octaveNoise(x: number, y: number, octaves: number = 4, persistence: number = 0.5): number {
+        let total = 0;
+        let frequency = 1;
+        let amplitude = 1;
+        let maxValue = 0;
+
+        for (let i = 0; i < octaves; i++) {
+            total += this.noise(x * frequency, y * frequency) * amplitude;
+            maxValue += amplitude;
+            amplitude *= persistence;
+            frequency *= 2;
+        }
+
+        return total / maxValue;
     }
 }

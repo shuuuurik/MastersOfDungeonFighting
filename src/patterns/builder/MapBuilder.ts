@@ -135,71 +135,67 @@ export class MapBuilder {
    */
   private generateTiles(fieldX: number, fieldY: number): Tile[][] {
     const tiles: Tile[][] = [];
-    
-    // Initialize with floor tiles
     const perlin = new PerlinNoise2D(42);
-    const scaleNoise = 0.25;
+    const biomeNoise = new PerlinNoise2D(1337);
+    const scaleNoise = 0.2; // более плавный ландшафт
+
     for (let y = 0; y < this.fieldHeight; y++) {
-      const row: Tile[] = [];
-      for (let x = 0; x < this.fieldWidth; x++) {
-        const position: Position = { x, y };
-        let tileType: TileType;
-        
-        const noise = perlin.noise(
-          x * scaleNoise + (fieldX * this.fieldWidth), 
-          y * scaleNoise + (fieldY * this.fieldHeight)
-        ) * 0.5 + 0.5; 
+        const row: Tile[] = [];
+        for (let x = 0; x < this.fieldWidth; x++) {
+            const position: Position = { x, y };
+            let tileType: TileType;
 
-        if (noise < 0.25) {
-          tileType = TileType.RIVER;
-        } else if (noise < 0.4) {
-          tileType = TileType.BEACH;
-        } else if (noise < 0.6) {
-          tileType = TileType.FIELD;
-        } else if (noise < 0.8) {
-          tileType = TileType.FOREST;
-        } else {
-          tileType = TileType.MOUNTAIN;
-        }
+            const globalX = x + fieldX * this.fieldWidth;
+            const globalY = y + fieldY * this.fieldHeight;
 
-        // Add walls around the map border
-        if (x === 0) {
-          tileType = TileType.EXIT_LEFT;
+            const height = perlin.octaveNoise(globalX * scaleNoise, globalY * scaleNoise, 10, 0.2);
+            const biome = biomeNoise.noise(globalX * scaleNoise, globalY * scaleNoise);
+
+            let noise = height * 0.5 + 0.5;
+            let noiseBiome = biome * 0.5 + 0.5;
+            noise = Math.pow(noise, 1.4); // делает высокие области редкими
+
+            if (noiseBiome < 0.33) {
+                // Водный биом (уменьшаем воду)
+                if (noise < 0.1) tileType = TileType.RIVER;
+                else if (noise < 0.25) tileType = TileType.BEACH;
+                else if (noise < 0.5) tileType = TileType.FIELD;
+                else tileType = TileType.FOREST;
+            } else if (noiseBiome < 0.66) {
+                // Лесной
+                if (noise < 0.25) tileType = TileType.FIELD;
+                else if (noise < 0.6) tileType = TileType.FOREST;
+                else tileType = TileType.MOUNTAIN;
+            } else {
+                // Горный
+                if (noise < 0.25) tileType = TileType.FIELD;
+                else if (noise < 0.5) tileType = TileType.FOREST;
+                else tileType = TileType.MOUNTAIN;
+            }
+
+            // Границы карты
+            if (x === 0) tileType = TileType.EXIT_LEFT;
+            if (x === this.fieldWidth - 1) tileType = TileType.EXIT_RIGHT;
+            if (y === 0) {
+                tileType = TileType.EXIT_UP;
+                if (x === 0 || x === this.fieldWidth - 1) tileType = TileType.WALL;
+            }
+            if (y === this.fieldHeight - 1) {
+                tileType = TileType.EXIT_DOWN;
+                if (x === 0 || x === this.fieldWidth - 1) tileType = TileType.WALL;
+            }
+
+            row.push({
+                type: tileType,
+                position,
+                entity: null
+            });
         }
-        if (x === this.fieldWidth - 1) {
-          tileType = TileType.EXIT_RIGHT;
-        }
-        
-        if (y === 0) {
-          tileType = TileType.EXIT_UP;
-          if (x === 0) {
-            tileType = TileType.WALL; // Top-left corner
-          }
-          if (x === this.fieldWidth - 1) {
-            tileType = TileType.WALL; // Top-right corner
-          }
-        }
-        
-        if (y === this.fieldHeight - 1) {
-          tileType = TileType.EXIT_DOWN;
-          if (x === 0) {
-            tileType = TileType.WALL; // Bottom-left corner
-          }
-          if (x === this.fieldWidth - 1) {
-            tileType = TileType.WALL; // Bottom-right corner
-          }
-        }
-        
-        row.push({
-          type: tileType,
-          position,
-          entity: null
-        });
-      }
-      tiles.push(row);
+        tiles.push(row);
     }
 
     return tiles;
-  }
+}
+
 
 }
