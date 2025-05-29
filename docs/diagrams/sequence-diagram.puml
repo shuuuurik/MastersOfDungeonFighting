@@ -1,0 +1,109 @@
+@startuml Sequence Diagram
+
+actor User
+participant "App" as App
+participant "CommandInvoker" as CommandInvoker
+participant "MoveCommand" as MoveCommand
+participant "GameEngine" as GameEngine
+participant "EntityManager" as EntityManager
+participant "MapBuilder" as MapBuilder
+participant "EnemyState" as EnemyState
+participant "BehaviorStrategy" as BehaviorStrategy
+participant "ReplicatingEntity" as ReplicatingEntity
+
+' Game Initialization
+User -> App: Start Game
+activate App
+App -> GameEngine: new GameEngine()
+activate GameEngine
+GameEngine -> MapBuilder: new MapBuilder()
+GameEngine -> MapBuilder: setWidth(30)\nsetHeight(20)\nbuild()
+activate MapBuilder
+MapBuilder --> GameEngine: gameMap
+deactivate MapBuilder
+GameEngine -> EntityManager: createPlayer()
+activate EntityManager
+EntityManager --> GameEngine: player
+deactivate EntityManager
+GameEngine -> EntityManager: spawnEnemiesOfType()
+activate EntityManager
+EntityManager --> GameEngine: enemies
+deactivate EntityManager
+GameEngine --> App: gameState
+deactivate GameEngine
+App --> User: Render Game
+deactivate App
+
+' Player Movement
+User -> App: Press arrow key
+activate App
+App -> CommandInvoker: addCommand(moveCommand)
+activate CommandInvoker
+CommandInvoker -> MoveCommand: new MoveCommand(direction)
+CommandInvoker -> MoveCommand: execute()
+activate MoveCommand
+MoveCommand -> GameEngine: movePlayer(direction)
+activate GameEngine
+GameEngine -> GameEngine: isValidMove()
+GameEngine -> GameEngine: processTurn()
+GameEngine --> MoveCommand: void
+deactivate GameEngine
+MoveCommand --> CommandInvoker: void
+deactivate MoveCommand
+CommandInvoker --> App: void
+deactivate CommandInvoker
+App -> GameEngine: getState()
+activate GameEngine
+GameEngine --> App: gameState
+deactivate GameEngine
+App --> User: Update UI
+deactivate App
+
+' Enemy Turn Processing
+note over GameEngine: During processTurn()
+activate GameEngine
+GameEngine -> GameEngine: processEnemyTurns()
+loop for each enemy
+  GameEngine -> EnemyState: getNextPosition()
+  activate EnemyState
+  EnemyState -> BehaviorStrategy: execute()
+  activate BehaviorStrategy
+  BehaviorStrategy --> EnemyState: newPosition
+  deactivate BehaviorStrategy
+  EnemyState --> GameEngine: newPosition
+  deactivate EnemyState
+  
+  alt Enemy moves to player's position
+    GameEngine -> GameEngine: combat(enemy, player)
+  else Enemy moves to empty position
+    GameEngine -> GameEngine: update enemy position
+  end
+end
+
+GameEngine -> GameEngine: processReplication()
+loop for replicating entities
+  GameEngine -> ReplicatingEntity: tryReplicate()
+  activate ReplicatingEntity
+  ReplicatingEntity -> ReplicatingEntity: clone()
+  ReplicatingEntity --> GameEngine: newEntity or null
+  deactivate ReplicatingEntity
+  
+  alt New entity created
+    GameEngine -> GameEngine: add entity to game state
+  end
+end
+
+GameEngine -> GameEngine: updateEnemyStates()
+loop for each enemy
+  GameEngine -> EnemyState: shouldTransition()
+  activate EnemyState
+  EnemyState --> GameEngine: newState or null
+  deactivate EnemyState
+  
+  alt State transition needed
+    GameEngine -> GameEngine: update enemy state
+  end
+end
+deactivate GameEngine
+
+@enduml
