@@ -1,6 +1,7 @@
 import { 
     EnemyCategory,
-  Entity, EntityType, GameField, GameMap, GameState, GameTheme, Position
+  Entity, EntityType, GameField, GameMap, GameState, GameTheme, Position,
+  TileType
 } from '../types/game';
 import { MapBuilder } from '../patterns/builder/MapBuilder';
 import { EntityManager } from './EntityManager';
@@ -38,27 +39,7 @@ export class GameEngine {
     currentField.tiles[playerPosition.y][playerPosition.x].entity = player;
     
     // Spawn different kinds of enemies
-    const enemies = [
-      ...this.entityManager.spawnEnemiesOfType(currentField, EnemyCategory.MELEE, 3),
-      ...this.entityManager.spawnEnemiesOfType(currentField, EnemyCategory.RANGED, 2),
-      ...this.entityManager.spawnEnemiesOfType(currentField, EnemyCategory.ELITE, 1),
-      ...this.entityManager.spawnEnemiesOfType(currentField, EnemyCategory.REPLICATING, 1)
-    ];
-    
-    // Setup replicating entities
-    const replicatingEnemies = enemies.filter(e => e.canReplicate);
-    for (const enemy of replicatingEnemies) {
-      const replicator = new ReplicatingEntity(enemy, enemy.replicationChance || 0.2, enemy.replicationCount || 20);
-      this.replicatingEntities.set(enemy.id, replicator);
-    }
-    
-    // Assign behaviors and initial states to enemies
-    enemies.forEach(enemy => {
-      const behavior = this.entityManager.getBehaviorForEnemy();
-      this.enemyBehaviors.set(enemy.id, behavior);
-      this.originalBehaviors.set(enemy.id, behavior);  // Store original behavior
-      this.enemyStates.set(enemy.id, new NormalState());
-    });
+    const enemies: Entity[] = this.spawnEnemies(currentField);
     
     this.state = {
       map,
@@ -69,13 +50,48 @@ export class GameEngine {
       victory: false,
       turn: 0,
       theme,
-      replicatingEntities: replicatingEnemies.map(e => e.id)
+      replicatingEntities: this.getReplicatingEntities(enemies)
     };
   }
   
   getState(): GameState {
     return this.state;
   }
+
+  /**
+   * Spawns enemies of different categories in the current field.
+   */
+  private spawnEnemies(field: GameField): Entity[] {
+    const enemies = [
+      ...this.entityManager.spawnEnemiesOfType(field, EnemyCategory.MELEE, 3),
+      ...this.entityManager.spawnEnemiesOfType(field, EnemyCategory.RANGED, 2),
+      ...this.entityManager.spawnEnemiesOfType(field, EnemyCategory.ELITE, 1),
+      ...this.entityManager.spawnEnemiesOfType(field, EnemyCategory.REPLICATING, 1)
+    ];
+
+    // Assign behaviors and initial states to enemies
+    enemies.forEach(enemy => {
+      const behavior = this.entityManager.getBehaviorForEnemy();
+      this.enemyBehaviors.set(enemy.id, behavior);
+      this.originalBehaviors.set(enemy.id, behavior);  // Store original behavior
+      this.enemyStates.set(enemy.id, new NormalState());
+    });
+    return enemies;
+  }
+
+  /**
+   * Returns a list of replicating entities from the current enemies.
+   */
+  private getReplicatingEntities(enemies: Entity[]): string[] {
+    // Setup replicating entities
+    const replicatingEnemies = enemies.filter(e => e.canReplicate);
+    for (const enemy of replicatingEnemies) {
+      const replicator = new ReplicatingEntity(enemy, enemy.replicationChance || 0.2, enemy.replicationCount || 20);
+      this.replicatingEntities.set(enemy.id, replicator);
+    }
+    return replicatingEnemies.map(e => e.id);
+  }
+
   
   movePlayer(direction: 'up' | 'down' | 'left' | 'right'): void {
     if (this.state.gameOver) return;
@@ -107,28 +123,47 @@ export class GameEngine {
       if (targetTile.entity && targetTile.entity.type === EntityType.ENEMY) {
         this.performAttack(this.state.player, targetTile.entity);
       } else {
-        // Move player to new position
         this.state.currentField.tiles[y][x].entity = null;
+        
+
+        if (targetTile.type === TileType.EXIT_RIGHT || 
+            targetTile.type === TileType.EXIT_LEFT ||
+            targetTile.type === TileType.EXIT_UP ||
+            targetTile.type === TileType.EXIT_DOWN) {
+            
+          this.state.currentField.tiles.forEach(row => {
+            row.forEach(tile => tile.entity = null);
+          });
+          switch (targetTile.type) {
+            case TileType.EXIT_UP:
+              this.state.currentField = this.state.map.fields[Math.max(0, Math.floor(this.state.currentField.position.y - 1))][this.state.currentField.position.x];
+              newX = this.state.player.position.x;
+              newY = this.state.currentField.height - 2;
+              break;
+            case TileType.EXIT_DOWN:
+              this.state.currentField = this.state.map.fields[Math.min(this.state.map.height - 1, Math.floor(this.state.currentField.position.y + 1))][this.state.currentField.position.x];
+              newX = this.state.player.position.x;
+              newY = 1;
+              break;
+            case TileType.EXIT_LEFT:
+              this.state.currentField = this.state.map.fields[this.state.currentField.position.y][Math.max(0, Math.floor(this.state.currentField.position.x - 1))];
+              newX = this.state.currentField.width - 2;
+              newY = this.state.player.position.y;
+              break;
+            case TileType.EXIT_RIGHT:
+              this.state.currentField = this.state.map.fields[this.state.currentField.position.y][Math.min(this.state.map.width - 1, Math.floor(this.state.currentField.position.x + 1))];
+              newX = 1;
+              newY = this.state.player.position.y;
+              break;
+          }
+
+          this.state.enemies = this.spawnEnemies(this.state.currentField);
+          this.state.replicatingEntities = this.getReplicatingEntities(this.state.enemies);
+          
+        }
+
         this.state.player.position = { x: newX, y: newY };
         this.state.currentField.tiles[newY][newX].entity = this.state.player;
-
-        // if (targetTile.type === TileType.EXIT_UP) {
-        //   // Handle exit up logic
-        //   this.state.currentField = this.state.map.fields[Math.max(0, Math.floor(this.state.currentField.position.y - 1))][this.state.currentField.position.x];
-        //   this.state.player.position = { x: this.state.player.position.x, y: this.state.currentField.height - 2 }; // Reset player position on new field
-        // } else if (targetTile.type === TileType.EXIT_DOWN) {
-        //   // Handle exit down logic
-        //   this.state.currentField = this.state.map.fields[Math.min(this.state.map.height - 1, Math.floor(this.state.currentField.position.y + 1))][this.state.currentField.position.x];
-        //   this.state.player.position = { x: this.state.player.position.x, y: 1}; // Reset player position on new field
-        // } else if (targetTile.type === TileType.EXIT_LEFT) {
-        //   // Handle exit left logic
-        //   this.state.currentField = this.state.map.fields[this.state.currentField.position.y][Math.max(0, Math.floor(this.state.currentField.position.x - 1))];
-        //   this.state.player.position = { x: this.state.currentField.width - 2, y: this.state.player.position.y }; // Reset player position on new field
-        // } else if (targetTile.type === TileType.EXIT_RIGHT) {
-        //   // Handle exit right logic
-        //   this.state.currentField = this.state.map.fields[this.state.currentField.position.y][Math.min(this.state.map.width - 1, Math.floor(this.state.currentField.position.x + 1))];
-        //   this.state.player.position = { x: 1, y: this.state.player.position.y }; // Reset player position on new field
-        // }
       }
       
       // Process turn after player's move
@@ -204,7 +239,10 @@ export class GameEngine {
     
     // Check if tile is walkable (not a wall)
     const tile = this.state.currentField.tiles[y][x];
-    return tile.type !== 'WALL' && tile.type !== 'RIVER' && tile.type !== 'MOUNTAIN';
+    return tile.type !== TileType.WALL 
+      && tile.type !== TileType.RIVER
+      && tile.type !== TileType.MOUNTAIN 
+      && tile.type !== TileType.NO_WAY;
   }
   
   private processEnemyTurns(): void {

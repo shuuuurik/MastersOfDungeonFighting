@@ -9,6 +9,7 @@ export enum TileType {
   EXIT_DOWN = 'EXIT_DOWN',
   EXIT_RIGHT = 'EXIT_RIGHT',
   EXIT_LEFT = 'EXIT_LEFT',
+  NO_WAY = 'NO_WAY',
 }
 
 export interface Position {

@@ -47,6 +47,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
         tileClass += ' exit-right';
         content = '▶️'; // Right arrow
         break;
+      case TileType.NO_WAY:
+        tileClass += ' no-way';
+        content = '❌'; // Cross mark
+        break;
       case TileType.WALL:
         tileClass += ' wall';
         break;

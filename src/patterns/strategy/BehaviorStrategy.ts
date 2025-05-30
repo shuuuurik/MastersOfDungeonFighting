@@ -18,6 +18,7 @@ export abstract class BehaviorStrategy {
           && tile.type !== TileType.EXIT_RIGHT
           && tile.type !== TileType.EXIT_DOWN
           && tile.type !== TileType.EXIT_LEFT
+          && tile.type !== TileType.NO_WAY
           && tile.entity === null;
   }
 }

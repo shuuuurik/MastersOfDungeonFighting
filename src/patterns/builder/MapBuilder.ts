@@ -102,6 +102,8 @@ export class MapBuilder {
    * Generate a procedural map with the current settings
    */
   private generateMap(): GameMap {
+    const perlin = new PerlinNoise2D(42);
+    const biomeNoise = new PerlinNoise2D(1337);
     const fields: GameField[][] = [];
 
     for (let y = 0; y < this.height; y++) {
@@ -110,7 +112,7 @@ export class MapBuilder {
           width: this.fieldWidth,
           height: this.fieldHeight,
           position: { x, y },
-          tiles: this.generateTiles(x, y)
+          tiles: this.generateTiles(x, y, perlin, biomeNoise)
         };
         
         if (!fields[y]) {
@@ -133,58 +135,92 @@ export class MapBuilder {
   /**
    * Generate tiles for a specific field position
    */
-  private generateTiles(fieldX: number, fieldY: number): Tile[][] {
+  private generateTiles(fieldX: number, fieldY: number, perlin: PerlinNoise2D, biomeNoise: PerlinNoise2D): Tile[][] {
     const tiles: Tile[][] = [];
-    const perlin = new PerlinNoise2D(42);
-    const biomeNoise = new PerlinNoise2D(1337);
     const scaleNoise = 0.2; // более плавный ландшафт
+    const effectiveWidth = this.fieldWidth - 2;
+    const effectiveHeight = this.fieldHeight - 2;
+
+    const generateTileType = (effectiveX: number, effectiveY: number, fX: number, fY: number): TileType => { 
+      const globalX = effectiveX + fX * effectiveWidth;
+      const globalY = effectiveY + fY * effectiveHeight;
+
+      const heightVal = perlin.octaveNoise(globalX * scaleNoise, globalY * scaleNoise, 10, 0.2);
+      const biomeVal = biomeNoise.noise(globalX * scaleNoise, globalY * scaleNoise);
+
+      let noise = heightVal * 0.5 + 0.5;
+      let noiseBiome = biomeVal * 0.5 + 0.5;
+      noise = Math.pow(noise, 1.4); // делает высокие области редкими
+
+      if (noiseBiome < 0.33) {
+          // Водный биом
+          if (noise < 0.1) return TileType.RIVER;
+          else if (noise < 0.25) return TileType.BEACH;
+          else if (noise < 0.5) return TileType.FIELD;
+          else return TileType.FOREST;
+      } else if (noiseBiome < 0.66) {
+          // Лесной
+          if (noise < 0.25) return TileType.FIELD;
+          else if (noise < 0.6) return TileType.FOREST;
+          else return TileType.MOUNTAIN;
+      } else {
+          // Горный
+          if (noise < 0.25) return TileType.FIELD;
+          else if (noise < 0.5) return TileType.FOREST;
+          else return TileType.MOUNTAIN;
+      }
+    };
 
     for (let y = 0; y < this.fieldHeight; y++) {
         const row: Tile[] = [];
         for (let x = 0; x < this.fieldWidth; x++) {
-            const position: Position = { x, y };
-            let tileType: TileType;
+            const position = { x, y };
+            let tileType: TileType = TileType.FIELD;
 
-            const globalX = x + fieldX * this.fieldWidth;
-            const globalY = y + fieldY * this.fieldHeight;
-
-            const height = perlin.octaveNoise(globalX * scaleNoise, globalY * scaleNoise, 10, 0.2);
-            const biome = biomeNoise.noise(globalX * scaleNoise, globalY * scaleNoise);
-
-            let noise = height * 0.5 + 0.5;
-            let noiseBiome = biome * 0.5 + 0.5;
-            noise = Math.pow(noise, 1.4); // делает высокие области редкими
-
-            if (noiseBiome < 0.33) {
-                // Водный биом (уменьшаем воду)
-                if (noise < 0.1) tileType = TileType.RIVER;
-                else if (noise < 0.25) tileType = TileType.BEACH;
-                else if (noise < 0.5) tileType = TileType.FIELD;
-                else tileType = TileType.FOREST;
-            } else if (noiseBiome < 0.66) {
-                // Лесной
-                if (noise < 0.25) tileType = TileType.FIELD;
-                else if (noise < 0.6) tileType = TileType.FOREST;
-                else tileType = TileType.MOUNTAIN;
+            // Обработка граничных клеток
+            if (x === 0 || x === this.fieldWidth - 1 || y === 0 || y === this.fieldHeight - 1) {
+                // Обработка углов (всегда WALL)
+                if (
+                  (x === 0 && y === 0) ||
+                  (x === 0 && y === this.fieldHeight - 1) ||
+                  (x === this.fieldWidth - 1 && y === 0) ||
+                  (x === this.fieldWidth - 1 && y === this.fieldHeight - 1)
+                ) {
+                    tileType = TileType.WALL;
+                } else {
+                    // Для остальных граничных клеток проверяем кандидата по непрерывной генерации,
+                    // учитывая, что внутренний диапазон имеет индексы 0 ... effectiveDimension-1.
+                    if (x === 0) {  // Левая граница (уже не угол, значит y от 1 до fieldHeight-2)
+                        // candidate: максимальный effectiveX = effectiveWidth - 1, effectiveY = y - 1
+                        const candidateTileType = generateTileType(effectiveWidth - 1, y - 1, fieldX - 1, fieldY);
+                        tileType = (candidateTileType === TileType.RIVER || candidateTileType === TileType.MOUNTAIN)
+                                   ? TileType.NO_WAY
+                                   : TileType.EXIT_LEFT;
+                    } else if (x === this.fieldWidth - 1) {  // Правая граница
+                        // candidate: effectiveX = 0, effectiveY = y - 1
+                        const candidateTileType = generateTileType(0, y - 1, fieldX + 1, fieldY);
+                        tileType = (candidateTileType === TileType.RIVER || candidateTileType === TileType.MOUNTAIN)
+                                   ? TileType.NO_WAY
+                                   : TileType.EXIT_RIGHT;
+                    } else if (y === 0) { // Верхняя граница (не угол, x от 1 до fieldWidth-2)
+                        // candidate: effectiveX = x - 1, effectiveY = effectiveHeight - 1
+                        const candidateTileType = generateTileType(x - 1, effectiveHeight - 1, fieldX, fieldY - 1);
+                        tileType = (candidateTileType === TileType.RIVER || candidateTileType === TileType.MOUNTAIN)
+                                   ? TileType.NO_WAY
+                                   : TileType.EXIT_UP;
+                    } else if (y === this.fieldHeight - 1) { // Нижняя граница
+                        // candidate: effectiveX = x - 1, effectiveY = 0
+                        const candidateTileType = generateTileType(x - 1, 0, fieldX, fieldY + 1);
+                        tileType = (candidateTileType === TileType.RIVER || candidateTileType === TileType.MOUNTAIN)
+                                   ? TileType.NO_WAY
+                                   : TileType.EXIT_DOWN;
+                    }
+                }
             } else {
-                // Горный
-                if (noise < 0.25) tileType = TileType.FIELD;
-                else if (noise < 0.5) tileType = TileType.FOREST;
-                else tileType = TileType.MOUNTAIN;
+                // Внутренняя клетка – используем координаты, сдвинутые на 1 (граница пропущена)
+                tileType = generateTileType(x - 1, y - 1, fieldX, fieldY);
             }
-
-            // Границы карты
-            if (x === 0) tileType = TileType.EXIT_LEFT;
-            if (x === this.fieldWidth - 1) tileType = TileType.EXIT_RIGHT;
-            if (y === 0) {
-                tileType = TileType.EXIT_UP;
-                if (x === 0 || x === this.fieldWidth - 1) tileType = TileType.WALL;
-            }
-            if (y === this.fieldHeight - 1) {
-                tileType = TileType.EXIT_DOWN;
-                if (x === 0 || x === this.fieldWidth - 1) tileType = TileType.WALL;
-            }
-
+            
             row.push({
                 type: tileType,
                 position,
@@ -193,7 +229,6 @@ export class MapBuilder {
         }
         tiles.push(row);
     }
-
     return tiles;
 }
 
