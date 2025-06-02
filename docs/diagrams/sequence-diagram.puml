@@ -5,8 +5,9 @@ participant "App" as App
 participant "CommandInvoker" as CommandInvoker
 participant "MoveCommand" as MoveCommand
 participant "GameEngine" as GameEngine
-participant "EntityManager" as EntityManager
 participant "MapBuilder" as MapBuilder
+participant "EntityManager" as EntityManager
+participant "GameField (center)" as GameField
 participant "EnemyState" as EnemyState
 participant "BehaviorStrategy" as BehaviorStrategy
 participant "ReplicatingEntity" as ReplicatingEntity
@@ -14,21 +15,39 @@ participant "ReplicatingEntity" as ReplicatingEntity
 ' Game Initialization
 User -> App: Start Game
 activate App
+
 App -> GameEngine: new GameEngine()
 activate GameEngine
+
 GameEngine -> MapBuilder: new MapBuilder()
-GameEngine -> MapBuilder: setWidth(30)\nsetHeight(20)\nbuild()
 activate MapBuilder
-MapBuilder --> GameEngine: gameMap
+MapBuilder --> GameEngine: GameMap
 deactivate MapBuilder
+
+GameEngine -> GameField: currentField = center of GameMap
+activate GameField
+
 GameEngine -> EntityManager: createPlayer()
 activate EntityManager
 EntityManager --> GameEngine: player
 deactivate EntityManager
-GameEngine -> EntityManager: spawnEnemiesOfType()
+
+GameEngine -> GameField: place player
+deactivate GameField
+
+GameEngine -> EntityManager: spawn all enemies on GameField
 activate EntityManager
-EntityManager --> GameEngine: enemies
+EntityManager --> GameEngine: enemies (mixed types)
 deactivate EntityManager
+
+GameEngine -> ReplicatingEntity: create replicators for any replicating enemies
+activate ReplicatingEntity
+ReplicatingEntity --> GameEngine: replicator(s)
+deactivate ReplicatingEntity
+
+GameEngine -> GameEngine: assign BehaviorStrategy to each enemy
+GameEngine -> GameEngine: set EnemyState = new NormalState()
+
 GameEngine --> App: gameState
 deactivate GameEngine
 App --> User: Render Game
