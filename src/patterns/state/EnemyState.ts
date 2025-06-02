@@ -1,4 +1,4 @@
-import { Entity, GameMap, Position } from '../../types/game';
+import { Entity, GameField, Position } from '../../types/game';
 import { BehaviorStrategy } from '../strategy/BehaviorStrategy';
 
 /**
@@ -8,7 +8,7 @@ export interface EnemyState {
   /**
    * Determine the next position based on the current state
    */
-  getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position;
+  getNextPosition(entity: Entity, player: Entity, gameField: GameField, originalStrategy: BehaviorStrategy): Position;
   
   /**
    * Check if state should transition to another state
@@ -31,9 +31,9 @@ export class NormalState implements EnemyState {
     this.panicHealthThreshold = panicHealthThreshold;
   }
   
-  getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position {
+  getNextPosition(entity: Entity, player: Entity, gameField: GameField, originalStrategy: BehaviorStrategy): Position {
     // Use the original strategy in normal state
-    return originalStrategy.execute(entity, player, gameMap);
+    return originalStrategy.execute(entity, player, gameField);
   }
   
   shouldTransition(entity: Entity): EnemyState | null {
@@ -65,9 +65,9 @@ export class PanicState implements EnemyState {
     this.recoveryThreshold = recoveryThreshold;
   }
   
-  getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position {
+  getNextPosition(entity: Entity, player: Entity, gameField: GameField, _: BehaviorStrategy): Position {
     // In panic state, always use fearful behavior
-    return this.fearfulStrategy.execute(entity, player, gameMap);
+    return this.fearfulStrategy.execute(entity, player, gameField);
   }
   
   shouldTransition(entity: Entity): EnemyState | null {
@@ -101,11 +101,11 @@ export class TrackingState implements EnemyState {
     this.aggressiveStrategy = new (require('../strategy/BehaviorStrategy').AggressiveBehavior)();
   }
   
-  getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position {
+  getNextPosition(entity: Entity, player: Entity, gameField: GameField, originalStrategy: BehaviorStrategy): Position {
     // Check if we're at the target position
     if (entity.position.x === this.targetPosition.x && entity.position.y === this.targetPosition.y) {
       // We've reached the target, transition to patrolling
-      return originalStrategy.execute(entity, player, gameMap);
+      return originalStrategy.execute(entity, player, gameField);
     }
     
     // Create a temporary player entity at the target position for pathfinding
@@ -115,7 +115,7 @@ export class TrackingState implements EnemyState {
     };
     
     // Use aggressive behavior to move towards the target
-    return this.aggressiveStrategy.execute(entity, targetEntity, gameMap);
+    return this.aggressiveStrategy.execute(entity, targetEntity, gameField);
   }
   
   shouldTransition(entity: Entity): EnemyState | null {
@@ -173,7 +173,7 @@ export class PatrolState implements EnemyState {
     this.currentPointIndex = Math.floor(Math.random() * this.patrolPoints.length);
   }
   
-  getNextPosition(entity: Entity, player: Entity, gameMap: GameMap, originalStrategy: BehaviorStrategy): Position {
+  getNextPosition(entity: Entity, _: Entity, gameField: GameField, __: BehaviorStrategy): Position {
     // Check if we need to move to the next patrol point
     this.stepsAtCurrentPoint++;
     if (this.stepsAtCurrentPoint >= this.maxStepsAtPoint) {
@@ -196,14 +196,14 @@ export class PatrolState implements EnemyState {
     // Try to move in x or y direction
     if (dx !== 0) {
       const newX = entity.position.x + dx;
-      if (this.isValidMove(newX, entity.position.y, gameMap)) {
+      if (this.isValidMove(newX, entity.position.y, gameField)) {
         return { x: newX, y: entity.position.y };
       }
     }
     
     if (dy !== 0) {
       const newY = entity.position.y + dy;
-      if (this.isValidMove(entity.position.x, newY, gameMap)) {
+      if (this.isValidMove(entity.position.x, newY, gameField)) {
         return { x: entity.position.x, y: newY };
       }
     }
@@ -212,14 +212,14 @@ export class PatrolState implements EnemyState {
     return { ...entity.position };
   }
   
-  private isValidMove(x: number, y: number, gameMap: GameMap): boolean {
+  private isValidMove(x: number, y: number, gameField: GameField): boolean {
     // Check map boundaries
-    if (x < 0 || y < 0 || x >= gameMap.width || y >= gameMap.height) {
+    if (x < 0 || y < 0 || x >= gameField.width || y >= gameField.height) {
       return false;
     }
     
     // Check if tile is walkable and has no entity
-    const tile = gameMap.tiles[y][x];
+    const tile = gameField.tiles[y][x];
     return tile.type !== 'WALL' && tile.entity === null;
   }
   

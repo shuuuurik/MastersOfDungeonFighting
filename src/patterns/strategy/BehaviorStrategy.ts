@@ -68,7 +68,7 @@ export class AggressiveBehavior extends BehaviorStrategy {
 }
 
 export class PassiveBehavior extends BehaviorStrategy {
-  execute(entity: Entity, player: Entity, gameField: GameField): Position {
+  execute(entity: Entity, _: Entity, __: GameField): Position {
     // Don't move, stay in place
     return { ...entity.position };
   }

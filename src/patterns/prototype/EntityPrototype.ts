@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Entity, GameField, GameMap, Position, TileType } from '../../types/game';
+import { Entity, GameField, Position, TileType } from '../../types/game';
 
 /**
  * Interface for objects that can clone themselves

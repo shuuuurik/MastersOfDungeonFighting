@@ -70,7 +70,7 @@ function App() {
   };
   
   const switchTheme = () => {
-    const newTheme = gameState.theme === GameTheme.FANTASY ? GameTheme.SCIFI : GameTheme.FANTASY;
+    const newTheme = gameState.theme === GameTheme.FANTASY ? GameTheme.FOREST : GameTheme.FANTASY;
     const newGameEngine = new GameEngine(newTheme);
     setGameEngine(newGameEngine);
     setGameState(newGameEngine.getState());
@@ -94,7 +94,7 @@ function App() {
         )}
         
         <button onClick={switchTheme} className="theme-button">
-          Switch to {gameState.theme === GameTheme.FANTASY ? 'Sci-Fi' : 'Fantasy'} Theme
+          Switch to {gameState.theme === GameTheme.FANTASY ? 'Forest' : 'Fantasy'} Theme
         </button>
       </div>
       
