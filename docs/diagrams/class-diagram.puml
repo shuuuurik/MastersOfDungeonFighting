@@ -117,10 +117,6 @@ GameTheme -- GameState
 ' ПАКЕТ: services (Game Logic)
 ' ===========================
 package "services" {
-  class MapLoader {
-    +loadMapFromFile(filepath: string): GameMap
-  }
-  
   class EntityManager {
     -entityFactory: EntityFactory
     +constructor(theme: GameTheme)
@@ -131,8 +127,20 @@ package "services" {
     +getBehaviorForEnemy(): BehaviorStrategy
   }
 
+  class MapService {
+    -map: GameMap
+    -currentField: GameField
+    +constructor(builder: MapBuilder)
+    +getMap(): GameMap
+    +getCurrentField(): GameField
+    +isValidMoveOnField(x: number, y: number): boolean
+    +isExitTile(x: number, y: number): boolean
+    +moveToAdjacentField(direction: string): void
+    +clearEntitiesOnCurrentField(): void
+  }
+
   class GameEngine {
-    -mapBuilder: MapBuilder
+    -mapService: MapService
     -entityManager: EntityManager
     -state: GameState
     -enemyBehaviors: Map<string, BehaviorStrategy>
@@ -147,7 +155,6 @@ package "services" {
     +processTurn(): void
     -spawnEnemies(field: GameField): Entity[]
     -getReplicatingEntities(enemies: Entity[]): string[]
-    -isValidMovePlayer(x: number, y: number): boolean
     -processEnemyTurns(): void
     -isAdjacentToPlayer(position: Position): boolean
     -combat(attacker: Entity, defender: Entity): void
@@ -162,7 +169,7 @@ package "services" {
 ' Связи внутри services
 EntityManager *-- patterns.factory.EntityFactory
 
-GameEngine *-- patterns.builder.MapBuilder
+GameEngine *-- MapService
 GameEngine *-- EntityManager
 GameEngine o-- types.GameState
 GameEngine o-- patterns.strategy.BehaviorStrategy
@@ -221,6 +228,10 @@ package "patterns" {
   
   ' --- Builder Pattern ---
   package "builder" {
+    class MapLoader {
+      +loadMapFromFile(filepath: string): GameMap
+    }
+
     class MapBuilder {
       -fieldWidth: number
       -fieldHeight: number
@@ -246,7 +257,7 @@ package "patterns" {
       -generateTiles(fieldX: number, fieldY: number, perlin, biomeNoise): Tile[][]
     }
 
-    MapBuilder *-- services.MapLoader
+    MapBuilder *-- MapLoader
     MapBuilder o-- patterns.factory.EntityFactory
   }
   

@@ -1,5 +1,4 @@
-import { GameMap, Position, Tile, TileType } from '../types/game';
-
+import { GameMap, Position, Tile, TileType } from '../../types/game';
 /**
  * Service for loading maps from files
  */

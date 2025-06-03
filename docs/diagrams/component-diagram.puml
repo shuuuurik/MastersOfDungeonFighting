@@ -9,9 +9,9 @@ package "Game Domain" {
 }
 
 package "Game Services" {
+  [MapService] as SRV_MapService
   [GameEngine] as SRV_GameEngine
   [EntityManager] as SRV_EntityManager
-  [MapLoader] as SRV_MapLoader
 }
 
 package "Design Patterns" {
@@ -28,6 +28,7 @@ package "Design Patterns" {
   }
   
   package "Builder" {
+    [MapLoader] as PAT_MapLoader
     [MapBuilder] as PAT_Builder
   }
   
@@ -75,10 +76,9 @@ DOM_GameState --> DOM_GameField
 DOM_GameState --> DOM_Entity
 
 ' Service relationships
-SRV_GameEngine --> PAT_Builder
+SRV_GameEngine --> SRV_MapService
 SRV_GameEngine --> SRV_EntityManager
 SRV_GameEngine --> DOM_GameState
-SRV_GameEngine --> DOM_GameField
 SRV_GameEngine --> PAT_Strategy
 SRV_GameEngine --> PAT_EnemyState
 SRV_GameEngine --> PAT_ReplicatingEntity
@@ -94,7 +94,7 @@ PAT_Strategy <-- PAT_Fearful
 PAT_Strategy <-- PAT_Decorator
 PAT_Decorator <-- PAT_ConfusedBehavior
 
-PAT_Builder --> SRV_MapLoader
+PAT_Builder --> PAT_MapLoader
 PAT_Builder --> PAT_Factory
 
 PAT_Factory <-- PAT_FantasyFactory
