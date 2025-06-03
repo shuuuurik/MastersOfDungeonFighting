@@ -1,6 +1,6 @@
 import { GameField, GameMap, Position, Tile, TileType } from '../../types/game';
 import { EntityFactory } from '../factory/EntityFactory';
-import { MapLoader } from '../../services/MapLoader';
+import { MapLoader } from './MapLoader';
 import PerlinNoise2D from '../../services/PerlinNoise';
 
 /**

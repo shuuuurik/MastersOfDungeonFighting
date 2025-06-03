@@ -76,7 +76,7 @@ export interface GameMap {
 
 export enum GameTheme {
   FANTASY = 'FANTASY',
-  SCIFI = 'SCIFI',
+  FOREST = 'FOREST',
 }
 
 export interface GameState {

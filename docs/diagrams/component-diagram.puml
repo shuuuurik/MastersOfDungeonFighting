@@ -1,21 +1,25 @@
 @startuml Component Diagram
 
-package "UI Components" {
-  [GameBoard] as UI_GameBoard
-  [StatusPanel] as UI_StatusPanel
-  [App] as UI_App
+package "Game Domain" {
+  [Entity] as DOM_Entity
+  [Tile] as DOM_Tile
+  [GameField] as DOM_GameField
+  [GameMap] as DOM_GameMap
+  [GameState] as DOM_GameState
 }
 
 package "Game Services" {
+  [MapService] as SRV_MapService
   [GameEngine] as SRV_GameEngine
   [EntityManager] as SRV_EntityManager
-  [MapGenerator] as SRV_MapGenerator
-  [MapLoader] as SRV_MapLoader
 }
 
 package "Design Patterns" {
   package "Strategy" {
     [BehaviorStrategy] as PAT_Strategy
+    [AggressiveBehavior] as PAT_Aggressive
+    [PassiveBehavior] as PAT_Passive
+    [FearfulBehavior] as PAT_Fearful
   }
   
   package "Decorator" {
@@ -24,17 +28,18 @@ package "Design Patterns" {
   }
   
   package "Builder" {
+    [MapLoader] as PAT_MapLoader
     [MapBuilder] as PAT_Builder
   }
   
   package "Abstract Factory" {
     [EntityFactory] as PAT_Factory
     [FantasyEntityFactory] as PAT_FantasyFactory
-    [SciFiEntityFactory] as PAT_SciFiFactory
+    [ForestEntityFactory] as PAT_ForestFactory
   }
   
   package "Prototype" {
-    [EntityPrototype] as PAT_Prototype
+    [EntityPrototype] as PAT_EntityPrototype
     [ReplicatingEntity] as PAT_ReplicatingEntity
   }
   
@@ -43,11 +48,12 @@ package "Design Patterns" {
     [MoveCommand] as PAT_MoveCommand
     [AttackCommand] as PAT_AttackCommand
     [ConfuseCommand] as PAT_ConfuseCommand
+    [WaitCommand] as PAT_WaitCommand
     [CommandInvoker] as PAT_CommandInvoker
   }
   
   package "State" {
-    [EnemyState] as PAT_State
+    [EnemyState] as PAT_EnemyState
     [NormalState] as PAT_NormalState
     [PanicState] as PAT_PanicState
     [TrackingState] as PAT_TrackingState
@@ -55,57 +61,63 @@ package "Design Patterns" {
   }
 }
 
-package "Game Domain" {
-  [Entity] as DOM_Entity
-  [GameMap] as DOM_GameMap
-  [Tile] as DOM_Tile
-  [GameState] as DOM_GameState
+package "UI Components" {
+  [GameBoard] as UI_GameBoard
+  [StatusPanel] as UI_StatusPanel
+  [App] as UI_App
 }
+
+' Domain relationships
+DOM_GameMap --> DOM_GameField
+DOM_GameField --> DOM_Tile
+DOM_Tile --> DOM_Entity
+DOM_GameState --> DOM_GameMap
+DOM_GameState --> DOM_GameField
+DOM_GameState --> DOM_Entity
+
+' Service relationships
+SRV_GameEngine --> SRV_MapService
+SRV_GameEngine --> SRV_EntityManager
+SRV_GameEngine --> DOM_GameState
+SRV_GameEngine --> PAT_Strategy
+SRV_GameEngine --> PAT_EnemyState
+SRV_GameEngine --> PAT_ReplicatingEntity
+
+SRV_EntityManager --> PAT_Factory
+SRV_EntityManager --> DOM_Entity
+
+' Pattern relationships
+PAT_Strategy <-- PAT_Aggressive
+PAT_Strategy <-- PAT_Passive
+PAT_Strategy <-- PAT_Fearful
+
+PAT_Strategy <-- PAT_Decorator
+PAT_Decorator <-- PAT_ConfusedBehavior
+
+PAT_Builder --> PAT_MapLoader
+PAT_Builder --> PAT_Factory
+
+PAT_Factory <-- PAT_FantasyFactory
+PAT_Factory <-- PAT_ForestFactory
+
+PAT_Command <-- PAT_MoveCommand
+PAT_Command <-- PAT_AttackCommand
+PAT_Command <-- PAT_ConfuseCommand
+PAT_Command <-- PAT_WaitCommand
+PAT_CommandInvoker --> PAT_Command
+
+PAT_EnemyState <-- PAT_NormalState
+PAT_EnemyState <-- PAT_PanicState
+PAT_EnemyState <-- PAT_TrackingState
+PAT_EnemyState <-- PAT_PatrolState
+
+PAT_EntityPrototype <-- PAT_ReplicatingEntity
 
 ' UI Component relationships
 UI_App --> UI_GameBoard
 UI_App --> UI_StatusPanel
 UI_App --> SRV_GameEngine
 
-' Service relationships
-SRV_GameEngine --> SRV_EntityManager
-SRV_GameEngine --> PAT_Builder
-SRV_GameEngine --> DOM_GameState
-SRV_EntityManager --> SRV_MapGenerator
-SRV_EntityManager --> PAT_Factory
-PAT_Builder --> SRV_MapLoader
-PAT_Builder --> SRV_MapGenerator
-PAT_Builder --> PAT_Factory
-
-' Pattern relationships
-PAT_Strategy <-- PAT_Decorator
-PAT_Decorator <-- PAT_ConfusedBehavior
-PAT_Factory <-- PAT_FantasyFactory
-PAT_Factory <-- PAT_SciFiFactory
-PAT_Command <-- PAT_MoveCommand
-PAT_Command <-- PAT_AttackCommand
-PAT_Command <-- PAT_ConfuseCommand
-PAT_CommandInvoker --> PAT_Command
-PAT_State <-- PAT_NormalState
-PAT_State <-- PAT_PanicState
-PAT_State <-- PAT_TrackingState
-PAT_State <-- PAT_PatrolState
-
-' Domain relationships
-DOM_GameMap --> DOM_Tile
-DOM_Tile --> DOM_Entity
-DOM_GameState --> DOM_GameMap
-DOM_GameState --> DOM_Entity
-
-' Cross-package relationships
-SRV_GameEngine --> PAT_Strategy
-SRV_GameEngine --> PAT_State
-SRV_GameEngine --> PAT_Prototype
-SRV_GameEngine --> PAT_Command
-SRV_EntityManager --> DOM_Entity
-SRV_MapGenerator --> DOM_GameMap
-PAT_Strategy --> DOM_Entity
-PAT_Strategy --> DOM_GameMap
 UI_GameBoard --> DOM_GameState
 UI_StatusPanel --> DOM_GameState
 
