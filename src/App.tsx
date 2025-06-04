@@ -78,28 +78,10 @@ function App() {
   };
   
   return (
-    <div className="game-container">
-      <h1>Roguelike Dungeon Fighter</h1>
-      
+    <div className="game-container">     
       <div className="game-layout">
         <GameBoard gameState={gameState} />
-        <StatusPanel gameState={gameState} />
-      </div>
-      
-      <div className="game-controls">
-        {!isGameRunning && (
-          <button onClick={startNewGame} className="new-game-button">
-            Start New Game
-          </button>
-        )}
-        
-        <button onClick={switchTheme} className="theme-button">
-          Switch to {gameState.theme === GameTheme.FANTASY ? 'Forest' : 'Fantasy'} Theme
-        </button>
-      </div>
-      
-      <div className="controls-help">
-        <p>Use arrow keys or WASD to move. Attack enemies by moving into them. Space to wait.</p>
+        <StatusPanel gameState={gameState} switchTheme={switchTheme} isGameRunning={isGameRunning} startNewGame={startNewGame}  />
       </div>
     </div>
   );

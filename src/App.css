@@ -56,7 +56,6 @@
   flex-direction: row;
   gap: 1.5rem;
   width: 100%;
-  align-items: flex-start;
 }
 
 @media (max-width: 768px) {
@@ -76,10 +75,16 @@
 }
 
 .game-controls {
-  margin-top: 1rem;
+  margin-top: auto;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+
+  & button {
+    width: 100%;
+    margin: 6px 0 0 0;
+  }
 }
 
 .new-game-button {

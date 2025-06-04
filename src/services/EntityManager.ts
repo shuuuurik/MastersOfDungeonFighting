@@ -5,10 +5,13 @@ import {
   TileType,
   Tile
 } from '../types/game';
-import { 
-  AggressiveBehavior, BehaviorStrategy, FearfulBehavior, PassiveBehavior 
-} from '../patterns/strategy/BehaviorStrategy';
-import { EntityFactory, FantasyEntityFactory, ForestEntityFactory } from '../patterns/factory/EntityFactory';
+import { BehaviorStrategy } from '../patterns/strategy/BehaviorStrategy';
+import { AggressiveBehavior } from '../patterns/strategy/AggressiveBehavior';
+import { PassiveBehavior } from '../patterns/strategy/PassiveBehavior';
+import { FearfulBehavior } from '../patterns/strategy/FearfulBehavior';
+import { EntityFactory } from '../patterns/factory/EntityFactory';
+import { FantasyEntityFactory } from '../patterns/factory/FantasyEntityFactory';
+import { ForestEntityFactory } from '../patterns/factory/ForestEntityFactory';
 
 export class EntityManager {
   private entityFactory: EntityFactory;

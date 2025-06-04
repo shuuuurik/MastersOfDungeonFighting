@@ -3,9 +3,10 @@ import { EnemyCategory, Entity, EntityType, GameField, GameState, GameTheme,
 import { MapBuilder } from '../patterns/builder/MapBuilder';
 import { EntityManager } from './EntityManager';
 import { BehaviorStrategy } from '../patterns/strategy/BehaviorStrategy';
-import { ConfusedBehavior } from '../patterns/decorator/BehaviorDecorator';
-import { ReplicatingEntity } from '../patterns/prototype/EntityPrototype';
-import { EnemyState, NormalState } from '../patterns/state/EnemyState';
+import { ConfusedBehavior } from '../patterns/strategy/ConfusedBehavior';
+import { ReplicatingEntity } from '../patterns/prototype/ReplicatingEntity';
+import { EnemyState } from '../patterns/state/EnemyState';
+import { NormalState } from '../patterns/state/NormalState';
 import { MapService } from './MapService';
 
 export class GameEngine {
@@ -214,10 +215,9 @@ export class GameEngine {
     if (this.state.gameOver) return;
     
     this.processEnemyTurns();
-    // Handle replicating entities
     this.processReplication();
-    // Decrement confusion durations
     this.processConfusionEffects();
+    this.regenerateEnemiesHealth();
     this.updateEnemyStates();
     this.state.turn++;
   }
@@ -229,7 +229,8 @@ export class GameEngine {
       
       // Get the behavior for this enemy
       const behavior = this.enemyBehaviors.get(enemy.id);
-      if (!behavior) return;
+      const state = this.enemyStates.get(enemy.id);
+      if (!behavior || !state) return;
       
       // Check if enemy is adjacent to player first (can attack)
       if (this.isAdjacentToPlayer(enemy.position)) {
@@ -237,9 +238,11 @@ export class GameEngine {
         this.combat(enemy, this.state.player);
         return; // Skip movement for this enemy
       }
+
+      const originalBehavior = this.originalBehaviors.get(enemy.id);
+      if (!originalBehavior) return;
       
-      // Calculate new position based on behavior
-      const newPosition = behavior.execute(enemy, this.state.player, this.state.currentField);
+      const newPosition = state.getNextPosition(enemy, this.state.player, this.state.currentField, originalBehavior);
       
       // If position changed, update the entity on the map
       if (newPosition.x !== enemy.position.x || newPosition.y !== enemy.position.y) {
@@ -379,6 +382,17 @@ export class GameEngine {
       if (newState) {
         this.enemyStates.set(enemy.id, newState);
       }
+    }
+  }
+  
+  private regenerateEnemiesHealth(): void {
+    for (const enemy of this.state.enemies) {
+      // Skip dead enemies
+      if (enemy.stats.health <= 0) continue;
+      
+      // Regenerate a small amount of health each turn (1% of max health)
+      const regenAmount = Math.max(1, Math.floor(enemy.stats.maxHealth * 0.01));
+      enemy.stats.health = Math.min(enemy.stats.health + regenAmount, enemy.stats.maxHealth);
     }
   }
   

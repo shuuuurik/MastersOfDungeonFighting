@@ -1,12 +1,15 @@
 import React from 'react';
-import { GameState } from '../types/game';
+import { GameState, GameTheme } from '../types/game';
 import '../styles/StatusPanel.css';
 
 interface StatusPanelProps {
   gameState: GameState;
+  switchTheme: () => void;
+  isGameRunning: boolean;
+  startNewGame: () => void;
 }
 
-const StatusPanel: React.FC<StatusPanelProps> = ({ gameState }) => {
+const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGameRunning, startNewGame }) => {
   const { player, gameOver, victory, turn, theme, enemies } = gameState;
   const { stats } = player;
   
@@ -20,8 +23,10 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState }) => {
     return acc;
   }, {} as Record<string, number>);
   
-  return (
+  return <>
     <div className="status-panel">
+      <h2>Roguelike Dungeon Fighter</h2>
+
       <div className="game-status">
         {gameOver ? (
           <h2>{victory ? 'Victory!' : 'Game Over!'}</h2>
@@ -87,11 +92,22 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState }) => {
           <li>WASD or Arrow keys: Move</li>
           <li>Move into enemies to attack</li>
           <li>Space: Skip turn</li>
-          <li>Watch out for replicating enemies!</li>
         </ul>
       </div>
+
+      <div className="game-controls">
+        {!isGameRunning && (
+          <button onClick={startNewGame} className="new-game-button">
+            Start New Game
+          </button>
+        )}
+
+        <button onClick={switchTheme} className="theme-button">
+          Switch to {gameState.theme === GameTheme.FANTASY ? 'Forest' : 'Fantasy'} Theme
+        </button>
+      </div>
     </div>
-  );
+  </>;
 };
 
 export default StatusPanel;
