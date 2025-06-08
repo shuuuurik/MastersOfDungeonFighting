@@ -102,8 +102,8 @@ export class MapBuilder {
    * Generate a procedural map with the current settings
    */
   private generateMap(): GameMap {
-    const perlin = new PerlinNoise2D(42);
-    const biomeNoise = new PerlinNoise2D(1337);
+    const perlin = new PerlinNoise2D(this.randomSeed);
+    const biomeNoise = new PerlinNoise2D(this.randomSeed + 1);
     const fields: GameField[][] = [];
 
     for (let y = 0; y < this.height; y++) {
@@ -230,7 +230,5 @@ export class MapBuilder {
         tiles.push(row);
     }
     return tiles;
-}
-
-
+  }
 }

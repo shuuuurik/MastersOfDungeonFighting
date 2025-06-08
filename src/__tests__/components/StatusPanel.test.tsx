@@ -142,7 +142,7 @@ describe('StatusPanel', () => {
       <StatusPanel
         gameState={mockGameState}
         switchTheme={mockSwitchTheme}
-        isGameRunning={false} // Важно: игра не запущена
+        isGameRunning={false} // игра не запущена
         startNewGame={mockStartNewGame}
       />
     );
@@ -192,7 +192,7 @@ describe('StatusPanel', () => {
     fireEvent.click(themeButton);
     expect(mockSwitchTheme).toHaveBeenCalledTimes(1);
 
-    // Пример для Forest темы
+    // для Forest темы
     const forestThemeState = { ...mockGameState, theme: GameTheme.FOREST };
     render(
       <StatusPanel

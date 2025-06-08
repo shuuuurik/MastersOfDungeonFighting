@@ -56,17 +56,6 @@ describe('MapBuilder', () => {
     expect(gameField.tiles[0].length).toBe(testFieldWidth);
   });
 
-  it('should correctly set field width and reflect it in the built GameField', () => {
-    const testFieldWidth = 15;
-    mapBuilder.setFieldWidth(testFieldWidth);
-    mapBuilder.setWidth(1).setHeight(1);
-    const gameMap: GameMap = mapBuilder.build();
-    const gameField: GameField = gameMap.fields[0][0];
-
-    expect(gameField.width).toBe(testFieldWidth);
-    expect(gameField.tiles[0].length).toBe(testFieldWidth);
-  });
-
   it('should correctly set field height and reflect it in the built GameField', () => {
     const testFieldHeight = 12;
     mapBuilder.setFieldHeight(testFieldHeight);
