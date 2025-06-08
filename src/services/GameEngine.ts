@@ -410,7 +410,7 @@ export class GameEngine {
     player.stats.level += 1;
     
     // Reset experience and increase next level threshold
-    player.stats.experience = 0;
+    player.stats.experience = player.stats.experience - player.stats.experienceToNextLevel;
     player.stats.experienceToNextLevel = Math.floor(player.stats.experienceToNextLevel * 1.5);
     
     // Improve stats
