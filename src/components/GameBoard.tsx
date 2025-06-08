@@ -74,6 +74,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
   return (
     <div 
       className="game-board"
+      role="grid"
       style={{ 
         gridTemplateColumns: `repeat(${currentField.width}, 1fr)`,
         gridTemplateRows: `repeat(${currentField.height}, 1fr)`

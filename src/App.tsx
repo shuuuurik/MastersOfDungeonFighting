@@ -9,7 +9,7 @@ import { CommandInvoker, MoveCommand, WaitCommand } from './patterns/command/Com
 function App() {
   const [gameEngine, setGameEngine] = useState(() => new GameEngine(GameTheme.FANTASY));
   const [gameState, setGameState] = useState<GameState>(gameEngine.getState());
-  const [isGameRunning, setIsGameRunning] = useState(true);
+  const [isGameRunning, setIsGameRunning] = useState(!gameEngine.getState().gameOver);
   const [commandInvoker] = useState(() => new CommandInvoker());
   
   // Handle keyboard input
@@ -43,14 +43,13 @@ function App() {
           return; // Don't execute commands for other keys
       }
       
-      // Execute the commands
       commandInvoker.executeCommands();
-      
+      const updatedGameState = gameEngine.getState();
       // Update the game state
-      setGameState({...gameEngine.getState()});
+      setGameState({...updatedGameState});
       
       // Check if game is over
-      if (gameEngine.getState().gameOver) {
+      if (updatedGameState.gameOver) {
         setIsGameRunning(false);
       }
     };

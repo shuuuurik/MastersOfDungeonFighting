@@ -21,7 +21,7 @@ export class MapLoader {
       const row: Tile[] = [];
       for (let x = 0; x < width; x++) {
         const position: Position = { x, y };
-        let tileType: TileType = TileType.FLOOR;
+        let tileType: TileType = TileType.FIELD;
         
         // Add walls around the map border
         if (x === 0 || y === 0 || x === width - 1 || y === height - 1) {
@@ -38,12 +38,12 @@ export class MapLoader {
     }
     
     // Add an exit
-    tiles[7][15].type = TileType.EXIT;
+    // tiles[7][15].type = TileType.EXIT;
     
     return {
       width,
       height,
-      tiles
+      fields: []
     };
   }
 }
