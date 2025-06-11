@@ -300,7 +300,7 @@ export class GameEngine {
         
         // Grant experience to player if player was the attacker
         if (attacker.type === EntityType.PLAYER) {
-          this.giveExperienceToPlayer(defender.stats.level * 10);
+          this.giveExperienceToPlayer(defender.stats.level * defender.experience);
         }
       }
       
