@@ -4,7 +4,7 @@ import { AggressiveBehavior } from '../strategy/AggressiveBehavior';
 import { EnemyState } from './EnemyState';
 import { NormalState } from './NormalState';
 import { PatrolState } from './PatrolState';
-
+import { PanicState } from './PanicState';
 
 export class TrackingState implements EnemyState {
   private targetPosition: Position;
@@ -36,6 +36,12 @@ export class TrackingState implements EnemyState {
   }
   
   shouldTransition(entity: Entity): EnemyState | null {
+    // First check health - panic has priority
+    const healthRatio = entity.stats.health / entity.stats.maxHealth;
+    if (healthRatio <= 0.3) {
+      return new PanicState();
+    }
+    
     // Calculate distance to target
     const dx = entity.position.x - this.targetPosition.x;
     const dy = entity.position.y - this.targetPosition.y;
@@ -48,6 +54,7 @@ export class TrackingState implements EnemyState {
     
     // If we've reached the target, switch to patrolling
     if (entity.position.x === this.targetPosition.x && entity.position.y === this.targetPosition.y) {
+      console.log(`${entity.name} reached last contact point and is now patrolling`);
       return new PatrolState(this.targetPosition, 5);
     }
     

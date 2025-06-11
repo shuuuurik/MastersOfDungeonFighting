@@ -2,7 +2,7 @@ import { Entity, GameField, Position } from '../../types/game';
 import { BehaviorStrategy } from '../strategy/BehaviorStrategy';
 import { FearfulBehavior } from '../strategy/FearfulBehavior';
 import { EnemyState } from './EnemyState';
-import { NormalState } from './NormalState';
+import { TrackingState } from './TrackingState';
 
 export class PanicState implements EnemyState {
   private fearfulStrategy: FearfulBehavior;
@@ -23,8 +23,10 @@ export class PanicState implements EnemyState {
     const healthPercentage = entity.stats.health / entity.stats.maxHealth;
     
     if (healthPercentage >= this.recoveryThreshold) {
-      // Transition back to normal state
-      return new NormalState();
+      // Instead of returning to normal state, go to tracking state
+      // The GameEngine will fill in the right target position
+      console.log(`${entity.name} recovered from panic and is now tracking`);
+      return new TrackingState({x: 0, y: 0}); // Dummy position, will be replaced
     }
     
     return null;

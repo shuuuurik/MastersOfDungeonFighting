@@ -1,6 +1,7 @@
 import { Entity, GameField, Position, TileType } from '../../types/game';
 import { EnemyState } from './EnemyState';
 import { PanicState } from './PanicState';
+import { NormalState } from './NormalState';
 import { BehaviorStrategy } from '../strategy/BehaviorStrategy';
 
 
@@ -11,10 +12,13 @@ export class PatrolState implements EnemyState {
   private currentPointIndex: number = 0;
   private stepsAtCurrentPoint: number = 0;
   private maxStepsAtPoint: number = 3;
+  private patrolDuration: number;
+  private currentPatrolTime: number = 0;
   
-  constructor(centerPosition: Position, patrolRadius: number = 5) {
+  constructor(centerPosition: Position, patrolRadius: number = 5, patrolDuration: number = 15) {
     this.centerPosition = centerPosition;
     this.patrolRadius = patrolRadius;
+    this.patrolDuration = patrolDuration;
     this.generatePatrolPoints();
   }
   
@@ -33,6 +37,9 @@ export class PatrolState implements EnemyState {
   }
   
   getNextPosition(entity: Entity, _: Entity, gameField: GameField, __: BehaviorStrategy): Position {
+    // Increment patrol time
+    this.currentPatrolTime++;
+    
     // Check if we need to move to the next patrol point
     this.stepsAtCurrentPoint++;
     if (this.stepsAtCurrentPoint >= this.maxStepsAtPoint) {
@@ -87,6 +94,12 @@ export class PatrolState implements EnemyState {
     const healthRatio = entity.stats.health / entity.stats.maxHealth;
     if (healthRatio <= 0.3) {
       return new PanicState();
+    }
+    
+    // Check if patrol duration is over, go back to normal state
+    if (this.currentPatrolTime >= this.patrolDuration) {
+      console.log(`${entity.name} finished patrolling and returned to normal state`);
+      return new NormalState();
     }
     
     return null;
