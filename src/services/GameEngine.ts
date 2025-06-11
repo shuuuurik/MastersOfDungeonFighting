@@ -397,7 +397,6 @@ export class GameEngine {
           if (lastContactPos) {
             // Replace the new state with one that knows the last contact position
             this.enemyStates.set(enemy.id, new TrackingState(lastContactPos));
-            console.log(`${enemy.name} is now tracking back to last contact at ${lastContactPos.x},${lastContactPos.y}`);
           } else {
             this.enemyStates.set(enemy.id, newState);
           }

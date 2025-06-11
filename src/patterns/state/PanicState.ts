@@ -14,19 +14,15 @@ export class PanicState implements EnemyState {
   }
   
   getNextPosition(entity: Entity, player: Entity, gameField: GameField, _: BehaviorStrategy): Position {
-    // Always use fearful behavior regardless of original strategy
     return this.fearfulStrategy.execute(entity, player, gameField);
   }
   
   shouldTransition(entity: Entity): EnemyState | null {
-    // Check if health is above recovery threshold
     const healthPercentage = entity.stats.health / entity.stats.maxHealth;
     
     if (healthPercentage >= this.recoveryThreshold) {
-      // Instead of returning to normal state, go to tracking state
       // The GameEngine will fill in the right target position
-      console.log(`${entity.name} recovered from panic and is now tracking`);
-      return new TrackingState({x: 0, y: 0}); // Dummy position, will be replaced
+      return new TrackingState({x: 0, y: 0});
     }
     
     return null;

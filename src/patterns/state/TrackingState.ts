@@ -54,7 +54,6 @@ export class TrackingState implements EnemyState {
     
     // If we've reached the target, switch to patrolling
     if (entity.position.x === this.targetPosition.x && entity.position.y === this.targetPosition.y) {
-      console.log(`${entity.name} reached last contact point and is now patrolling`);
       return new PatrolState(this.targetPosition, 5);
     }
     
