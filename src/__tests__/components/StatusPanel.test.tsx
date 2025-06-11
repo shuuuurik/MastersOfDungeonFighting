@@ -26,6 +26,7 @@ describe('StatusPanel', () => {
     victory: false,
     theme: GameTheme.FANTASY,
     replicatingEntities: [],
+    confusionCooldown: 0
   };
 
   const mockSwitchTheme = jest.fn();

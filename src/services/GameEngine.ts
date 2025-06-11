@@ -23,6 +23,7 @@ export class GameEngine {
   
   // Add this property to track last contact positions with enemies
   private lastPlayerContactPositions: Map<string, Position> = new Map();
+  private readonly maxConfusionCooldown: number = 10;
   
   constructor(theme: GameTheme = GameTheme.FANTASY) {
     this.entityManager = new EntityManager(theme);
@@ -52,7 +53,8 @@ export class GameEngine {
       victory: false,
       turn: 0,
       theme,
-      replicatingEntities: this.getReplicatingEntities(enemies)
+      replicatingEntities: this.getReplicatingEntities(enemies),
+      confusionCooldown: 0
     };
   }
   
@@ -183,22 +185,7 @@ export class GameEngine {
     }
   }
   
-  confuseEnemyAt(position: Position, duration: number = 5): void {
-    if (this.state.gameOver) return;
-    
-    const { x, y } = position;
-    
-    // Check map boundaries
-    if (x < 0 || y < 0 || x >= this.state.currentField.width || y >= this.state.currentField.height) {
-      return;
-    }
-    
-    const tile = this.state.currentField.tiles[y][x];
-    if (!tile.entity || tile.entity.type !== EntityType.ENEMY) {
-      return; // No enemy at this position
-    }
-    
-    const enemy = tile.entity;
+  private confuseEnemy(enemy: Entity, duration: number): void {
     const originalBehavior = this.originalBehaviors.get(enemy.id);
     
     if (originalBehavior) {
@@ -210,9 +197,28 @@ export class GameEngine {
       enemy.confused = true;
       enemy.confusionTurns = duration;
     }
+  }
+
+  useConfusionAbility(): void {
+    if (this.state.gameOver) return;
     
-    // Process turn after player's action
+    if (this.state.confusionCooldown > 0) return;
+    
+    const confusedEnemies = this.getEnemiesInRange(this.state.player.position, 2);
+    
+    if (confusedEnemies.length === 0) return;
+    
+    confusedEnemies.forEach(enemy => this.confuseEnemy(enemy, 5));
+    this.state.confusionCooldown = this.maxConfusionCooldown + 1;
     this.processTurn();
+  }
+
+  private getEnemiesInRange(position: Position, range: number): Entity[] {
+    return this.state.enemies.filter(enemy => {
+      const dx = Math.abs(enemy.position.x - position.x);
+      const dy = Math.abs(enemy.position.y - position.y);
+      return dx <= range && dy <= range;
+    });
   }
   
   processTurn(): void {
@@ -223,6 +229,11 @@ export class GameEngine {
     this.processConfusionEffects();
     this.regenerateEnemiesHealth();
     this.updateEnemyStates();
+    
+    if (this.state.confusionCooldown > 0) {
+      this.state.confusionCooldown--;
+    }
+    
     this.state.turn++;
   }
   
@@ -242,11 +253,16 @@ export class GameEngine {
         this.combat(enemy, this.state.player);
         return; // Skip movement for this enemy
       }
-
-      const originalBehavior = this.originalBehaviors.get(enemy.id);
-      if (!originalBehavior) return;
       
-      const newPosition = state.getNextPosition(enemy, this.state.player, this.state.currentField, originalBehavior);
+      let newPosition;
+      
+      if (enemy.confused) {
+        newPosition = behavior.execute(enemy, this.state.player, this.state.currentField);
+      } else {
+        const originalBehavior = this.originalBehaviors.get(enemy.id);
+        if (!originalBehavior) return;
+        newPosition = state.getNextPosition(enemy, this.state.player, this.state.currentField, originalBehavior);
+      }
       
       // If position changed, update the entity on the map
       if (newPosition.x !== enemy.position.x || newPosition.y !== enemy.position.y) {

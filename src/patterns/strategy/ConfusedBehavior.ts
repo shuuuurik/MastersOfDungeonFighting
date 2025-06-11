@@ -1,6 +1,7 @@
 import { Entity, GameField, Position } from '../../types/game';
 import { BehaviorStrategy } from './BehaviorStrategy';
 import { BehaviorDecorator } from '../decorator/BehaviorDecorator';
+import Random from '../../services/Random';
 
 /**
  * Confused behavior decorator makes entities move randomly
@@ -20,27 +21,39 @@ export class ConfusedBehavior extends BehaviorDecorator {
     
     this.turnsRemaining--;
     
-    // Get all possible adjacent positions
-    const { x, y } = entity.position;
-    const possibleMoves: Position[] = [
-      { x: x+1, y },
-      { x: x-1, y },
-      { x, y: y+1 },
-      { x, y: y-1 },
-      { x: x+1, y: y+1 },
-      { x: x-1, y: y-1 },
-      { x: x+1, y: y-1 },
-      { x: x-1, y: y+1 },
-    ];
-    
+    const possibleMoves: Position[] = this.getRandomAdjacentPositions(entity.position);
     const validMoves = possibleMoves.filter(pos => BehaviorStrategy.isValidMove(pos.x, pos.y, gameField));
     
     if (validMoves.length === 0) {
       return { ...entity.position };
     }
     
-    const randomIndex = Math.floor(Math.random() * validMoves.length);
-    return validMoves[randomIndex];
+    const randomIndex = Math.floor(Random.uniform(0, validMoves.length));
+    const newPosition = validMoves[randomIndex];
+    
+    return newPosition;
+  }
+  
+  private getRandomAdjacentPositions(position: Position): Position[] {
+    const { x, y } = position;
+    const positions: Position[] = [];
+    
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        positions.push({ x: x + dx, y: y + dy });
+      }
+    }
+    
+    return this.shuffleArray(positions);
+  }
+  
+  private shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Random.uniform(0, i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
   
   isConfused(): boolean {

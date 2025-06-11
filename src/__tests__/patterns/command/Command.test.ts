@@ -12,7 +12,7 @@ import { Entity, EntityType, Position } from '../../../types/game';
 const mockGameEngine = {
   movePlayer: jest.fn(),
   performAttack: jest.fn(),
-  confuseEnemyAt: jest.fn(),
+  useConfusionAbility: jest.fn(),
   processTurn: jest.fn(),
   getState: jest.fn(),
 };
@@ -68,17 +68,17 @@ describe('Command Pattern', () => {
     const mockDuration: number = 3;
 
     it('should call gameEngine.confuseEnemyAt with the target position and duration', () => {
-      const command = new ConfuseCommand(mockGameEngine as unknown as GameEngine, mockTargetPosition, mockDuration);
+      const command = new ConfuseCommand(mockGameEngine as unknown as GameEngine);
       command.execute();
-      expect(mockGameEngine.confuseEnemyAt).toHaveBeenCalledTimes(1);
-      expect(mockGameEngine.confuseEnemyAt).toHaveBeenCalledWith(mockTargetPosition, mockDuration);
+      expect(mockGameEngine.useConfusionAbility).toHaveBeenCalledTimes(1);
+      expect(mockGameEngine.useConfusionAbility).toHaveBeenCalledWith();
     });
 
     it('should use default duration if not provided', () => {
-      const command = new ConfuseCommand(mockGameEngine as unknown as GameEngine, mockTargetPosition);
+      const command = new ConfuseCommand(mockGameEngine as unknown as GameEngine);
       command.execute();
-      expect(mockGameEngine.confuseEnemyAt).toHaveBeenCalledTimes(1);
-      expect(mockGameEngine.confuseEnemyAt).toHaveBeenCalledWith(mockTargetPosition, 5); // Default duration is 5
+      expect(mockGameEngine.useConfusionAbility).toHaveBeenCalledTimes(1);
+      expect(mockGameEngine.useConfusionAbility).toHaveBeenCalledWith();
     });
   });
 

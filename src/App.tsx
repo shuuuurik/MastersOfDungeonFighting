@@ -4,7 +4,7 @@ import GameBoard from './components/GameBoard';
 import StatusPanel from './components/StatusPanel';
 import { GameEngine } from './services/GameEngine';
 import { GameState, GameTheme } from './types/game';
-import { CommandInvoker, MoveCommand, WaitCommand } from './patterns/command/Command';
+import { CommandInvoker, MoveCommand, WaitCommand, ConfuseCommand } from './patterns/command/Command';
 
 function App() {
   const [gameEngine, setGameEngine] = useState(() => new GameEngine(GameTheme.FANTASY));
@@ -38,6 +38,9 @@ function App() {
         case ' ':
           // Space bar to wait (skip turn)
           commandInvoker.addCommand(new WaitCommand(gameEngine));
+          break;
+        case 'c': // Add 'c' key for confusion ability
+          commandInvoker.addCommand(new ConfuseCommand(gameEngine));
           break;
         default:
           return; // Don't execute commands for other keys

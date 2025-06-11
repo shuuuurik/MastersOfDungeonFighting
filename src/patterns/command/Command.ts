@@ -1,5 +1,5 @@
 import { GameEngine } from '../../services/GameEngine';
-import { Entity, Position } from '../../types/game';
+import { Entity } from '../../types/game';
 
 /**
  * Command interface for player actions
@@ -25,22 +25,15 @@ export class MoveCommand implements Command {
   }
 }
 
-/**
- * Command for confusing an enemy at a specific position
- */
 export class ConfuseCommand implements Command {
   private gameEngine: GameEngine;
-  private targetPosition: Position;
-  private duration: number;
   
-  constructor(gameEngine: GameEngine, targetPosition: Position, duration: number = 5) {
+  constructor(gameEngine: GameEngine) {
     this.gameEngine = gameEngine;
-    this.targetPosition = targetPosition;
-    this.duration = duration;
   }
   
   execute(): void {
-    this.gameEngine.confuseEnemyAt(this.targetPosition, this.duration);
+    this.gameEngine.useConfusionAbility();
   }
 }
 
