@@ -51,7 +51,8 @@ describe('Command Pattern', () => {
     const mockTarget: Entity = {
       id: 'e1', name: 'Enemy', type: EntityType.ENEMY, position: { x: 1, y: 0 },
       stats: { health: 20, maxHealth: 20, attack: 5, defense: 1, experience: 0, level: 1, experienceToNextLevel: 0 },
-      symbol: 'E'
+      symbol: 'E',
+      experience: 10
     };
 
     it('should call gameEngine.performAttack with the correct attacker and target', () => {
