@@ -100,4 +100,5 @@ export interface GameState {
   turn: number;
   theme: GameTheme;
   replicatingEntities: string[]; // IDs of entities that can replicate
+  confusionCooldown: number;
 }

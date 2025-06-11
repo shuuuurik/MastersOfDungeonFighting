@@ -57,14 +57,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState }) => {
     }
     
     if (tile.entity) {
+      tileClass += ` entity ${tile.entity.type.toLowerCase()}`;
+      
+      if (tile.entity.confused) {
+        tileClass += ' confused';
+      }
+      
       content = tile.entity.symbol;
-      tileClass = 'tile entity ' + tile.entity.type.toLowerCase();
     }
+    
     return (
       <div 
         key={`${tile.position.x}-${tile.position.y}`}
         className={tileClass}
-        title={tile.entity ? tile.entity.name : tile.type}
+        title={tile.entity ? `${tile.entity.name}${tile.entity.confused ? ' (Confused)' : ''}` : tile.type}
       >
         {content}
       </div>

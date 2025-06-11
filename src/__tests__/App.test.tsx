@@ -50,6 +50,7 @@ const mockInitialGameState: GameState = {
   victory: false,
   theme: GameTheme.FANTASY,
 	replicatingEntities: [],
+  confusionCooldown: 0
 };
 
 describe('App', () => {

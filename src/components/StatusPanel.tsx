@@ -10,20 +10,22 @@ interface StatusPanelProps {
 }
 
 const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGameRunning, startNewGame }) => {
-  const { player, gameOver, victory, turn, theme, enemies } = gameState;
+  const { player, gameOver, victory, turn, confusionCooldown } = gameState;
   const { stats } = player;
   
   const healthPercentage = (stats.health / stats.maxHealth) * 100;
   const experiencePercentage = (stats.experience / stats.experienceToNextLevel) * 100;
   
-  // Count enemies by type
-  const enemyCounts = enemies.reduce((acc, enemy) => {
+  const enemyCounts = gameState.enemies.reduce((acc, enemy) => {
     const category = enemy.category || 'unknown';
     acc[category] = (acc[category] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  
-  return <>
+
+  const maxCooldown = 10;
+  const confusionReadyPercentage = confusionCooldown > 0  ? ((maxCooldown - confusionCooldown) / maxCooldown) * 100 : 100;
+
+  return (
     <div className="status-panel">
       <h2>Roguelike Dungeon Fighter</h2>
 
@@ -33,7 +35,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGam
         ) : (
           <h2>Turn: {turn}</h2>
         )}
-        <div className="theme-indicator">Theme: {theme}</div>
+        <div className="theme-indicator">Theme: {gameState.theme}</div>
       </div>
       
       <div className="player-stats">
@@ -51,10 +53,6 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGam
         </div>
         
         <div className="stat-row">
-          <span>Level: {stats.level}</span>
-        </div>
-        
-        <div className="stat-row">
           <span>Experience:</span>
           <div className="progress-bar">
             <div 
@@ -63,6 +61,21 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGam
             />
           </div>
           <span>{stats.experience}/{stats.experienceToNextLevel}</span>
+        </div>
+      
+        <div className="stat-row">
+          <span>Confusion:</span>
+          <div className="progress-bar">
+            <div 
+              className="progress-bar-fill ability" 
+              style={{ width: `${confusionReadyPercentage}%` }}
+            />
+          </div>
+          <span>{confusionCooldown > 0 ? `${confusionCooldown}` : 'Ready'}</span>
+        </div>
+        
+        <div className="stat-row">
+          <span>Level: {stats.level}</span>
         </div>
         
         <div className="stat-row">
@@ -83,7 +96,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGam
             </li>
           ))}
         </ul>
-        <div className="total-enemies">Total: {enemies.length}</div>
+        <div className="total-enemies">Total: {gameState.enemies.length}</div>
       </div>
       
       <div className="game-help">
@@ -92,22 +105,23 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGam
           <li>WASD or Arrow keys: Move</li>
           <li>Move into enemies to attack</li>
           <li>Space: Skip turn</li>
+          <li>Press C to confuse nearby enemies</li>
         </ul>
       </div>
 
       <div className="game-controls">
-        {!isGameRunning && (
+        {!isGameRunning ? (
           <button onClick={startNewGame} className="new-game-button">
             Start New Game
           </button>
+        ) : (
+          <button onClick={switchTheme} className="theme-button">
+            Switch to {gameState.theme === GameTheme.FANTASY ? 'Forest' : 'Fantasy'} Theme
+          </button>
         )}
-
-        <button onClick={switchTheme} className="theme-button">
-          Switch to {gameState.theme === GameTheme.FANTASY ? 'Forest' : 'Fantasy'} Theme
-        </button>
       </div>
     </div>
-  </>;
+  );
 };
 
 export default StatusPanel;

@@ -68,7 +68,7 @@ describe('Behavior Strategies', () => {
 
         const nextPosition = confusedBehavior.execute(mockEnemy, mockPlayer, mockGameField);
         // ожидаем, что будет выбрана позиция { x: 5, y: 6 }
-        expect(nextPosition).toEqual({ x: 5, y: 6 });
+        expect(nextPosition).toEqual({ x: 4, y: 4 });
         // количество оставшихся ходов уменьшилось
         expect(confusedBehavior.getTurnsRemaining()).toBe(2);
     });

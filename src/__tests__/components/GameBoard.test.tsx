@@ -41,6 +41,7 @@ describe('GameBoard', () => {
     victory: false,
     theme: GameTheme.FANTASY,
     replicatingEntities: [],
+    confusionCooldown: 0,
   };
 
   beforeEach(() => {
