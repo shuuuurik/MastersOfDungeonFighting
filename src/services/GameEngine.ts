@@ -7,6 +7,7 @@ import { ConfusedBehavior } from '../patterns/strategy/ConfusedBehavior';
 import { ReplicatingEntity } from '../patterns/prototype/ReplicatingEntity';
 import { EnemyState } from '../patterns/state/EnemyState';
 import { NormalState } from '../patterns/state/NormalState';
+import { TrackingState } from '../patterns/state/TrackingState'
 import { MapService } from './MapService';
 
 export class GameEngine {
@@ -19,6 +20,9 @@ export class GameEngine {
   private enemyStates: Map<string, EnemyState> = new Map();
   private originalBehaviors: Map<string, BehaviorStrategy> = new Map();
   private replicatingEntities: Map<string, ReplicatingEntity> = new Map();
+  
+  // Add this property to track last contact positions with enemies
+  private lastPlayerContactPositions: Map<string, Position> = new Map();
   
   constructor(theme: GameTheme = GameTheme.FANTASY) {
     this.entityManager = new EntityManager(theme);
@@ -283,6 +287,12 @@ export class GameEngine {
     // Apply damage
     defender.stats.health -= damage;
     
+    // If player attacks enemy, record the contact position
+    if (attacker.type === EntityType.PLAYER && defender.type === EntityType.ENEMY) {
+      // Store the enemy's current position as the last contact point
+      this.lastPlayerContactPositions.set(defender.id, {...defender.position});
+    }
+    
     // Check if defender is dead
     if (defender.stats.health <= 0) {
       defender.stats.health = 0;
@@ -300,7 +310,7 @@ export class GameEngine {
         
         // Grant experience to player if player was the attacker
         if (attacker.type === EntityType.PLAYER) {
-          this.giveExperienceToPlayer(defender.stats.level * 10);
+          this.giveExperienceToPlayer(defender.stats.level * defender.experience);
         }
       }
       
@@ -380,7 +390,20 @@ export class GameEngine {
       // Check for state transitions
       const newState = currentState.shouldTransition(enemy);
       if (newState) {
-        this.enemyStates.set(enemy.id, newState);
+        // If we're transitioning from PanicState to another state,
+        // provide the last contact position for tracking
+        if (currentState.getName() === 'Panic' && newState.getName() === 'Tracking') {
+          const lastContactPos = this.lastPlayerContactPositions.get(enemy.id);
+          if (lastContactPos) {
+            // Replace the new state with one that knows the last contact position
+            this.enemyStates.set(enemy.id, new TrackingState(lastContactPos));
+            console.log(`${enemy.name} is now tracking back to last contact at ${lastContactPos.x},${lastContactPos.y}`);
+          } else {
+            this.enemyStates.set(enemy.id, newState);
+          }
+        } else {
+          this.enemyStates.set(enemy.id, newState);
+        }
       }
     }
   }

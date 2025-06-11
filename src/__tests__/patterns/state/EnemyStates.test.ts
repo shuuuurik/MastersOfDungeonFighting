@@ -32,6 +32,7 @@ describe('Enemy States (State Pattern)', () => {
                 experienceToNextLevel: 0,
             },
             symbol: 'E',
+            experience: 10
         };
 
         mockPlayer = {
@@ -147,12 +148,12 @@ describe('Enemy States (State Pattern)', () => {
             expect(panicState.getName()).toBe('Panic');
         });
 
-        it('should transition to NormalState if health recovers above threshold', () => {
+        it('should transition to TrackingState if health recovers above threshold', () => {
             mockEntity.stats.health = mockEntity.stats.maxHealth * 0.6; // 60% здоровья
 
             const nextState = panicState.shouldTransition(mockEntity);
 
-            expect(nextState).toBeInstanceOf(NormalState);
+            expect(nextState).toBeInstanceOf(TrackingState);
         });
 
         it('should not transition if health is still below recovery threshold', () => {

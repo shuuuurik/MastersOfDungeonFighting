@@ -40,20 +40,31 @@ export enum EnemyCategory {
   REPLICATING = 'REPLICATING'
 }
 
-export interface Entity {
+export interface BaseEntity {
   id: string;
-  type: EntityType;
   position: Position;
   stats: GameStats;
   symbol: string;
   name: string;
-  category?: EnemyCategory; // Optional category for enemies
-  confused?: boolean; // Flag to indicate confused state
-  confusionTurns?: number; // Number of turns confusion remains
-  canReplicate?: boolean; // Flag for replicating entities
-  replicationChance?: number; // Chance of replication per turn
-  replicationCount?: number; // Count of replication less
+  category?: EnemyCategory;
+  confused?: boolean;
+  confusionTurns?: number;
+  canReplicate?: boolean;
+  replicationChance?: number;
+  replicationCount?: number;
 }
+
+export interface EnemyEntity extends BaseEntity {
+  type: EntityType.ENEMY;
+  category?: EnemyCategory;
+  experience: number; // Обязательное поле для врагов
+}
+
+export interface OtherEntity extends BaseEntity {
+  type: Exclude<EntityType, EntityType.ENEMY>;
+}
+
+export type Entity = EnemyEntity | OtherEntity;
 
 export interface Tile {
   type: TileType;

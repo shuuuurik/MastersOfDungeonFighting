@@ -15,9 +15,9 @@ describe('StatusPanel', () => {
       symbol: '🤡',
     },
     enemies: [
-      { id: 'e1', name: 'Goblin', type: EntityType.ENEMY, category: EnemyCategory.MELEE, position: { x: 0, y: 0 }, stats: {} as any, symbol: 'G' },
-      { id: 'e2', name: 'Orc', type: EntityType.ENEMY, category: EnemyCategory.MELEE, position: { x: 0, y: 0 }, stats: {} as any, symbol: 'O' },
-      { id: 'e3', name: 'Archer', type: EntityType.ENEMY, category: EnemyCategory.RANGED, position: { x: 0, y: 0 }, stats: {} as any, symbol: 'A' },
+      { id: 'e1', name: 'Goblin', type: EntityType.ENEMY, category: EnemyCategory.MELEE, position: { x: 0, y: 0 }, stats: {} as any, symbol: 'G', experience: 10 },
+      { id: 'e2', name: 'Orc', type: EntityType.ENEMY, category: EnemyCategory.MELEE, position: { x: 0, y: 0 }, stats: {} as any, symbol: 'O', experience: 10 },
+      { id: 'e3', name: 'Archer', type: EntityType.ENEMY, category: EnemyCategory.RANGED, position: { x: 0, y: 0 }, stats: {} as any, symbol: 'A', experience: 10 },
     ],
     currentField: {} as any, // неважно
     map: {} as any, // неважно

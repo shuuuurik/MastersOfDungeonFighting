@@ -37,6 +37,7 @@ describe('ReplicatingEntity (Prototype Pattern)', () => {
                 experienceToNextLevel: 0,
             },
             symbol: '🍄',
+            experience: 10
         };
 
         // обертка для репликации; дефолтные значения: replicationChance = 0.2, replicationCount = 10
@@ -149,6 +150,7 @@ describe('ReplicatingEntity (Prototype Pattern)', () => {
                 position: { x: initialPosition.x + 1, y: initialPosition.y },
                 stats: { health: 1, maxHealth: 1, attack: 1, defense: 1, experience: 0, level: 1, experienceToNextLevel: 0 },
                 symbol: 'X',
+                experience: 10
             };
             // мокаем Math.random так, чтобы он всегда выбирал эту занятую позицию первой,
             // но т.к. isValidPosition отфильтрует, он должен будет выбрать следующую (если есть) или null.
@@ -232,7 +234,7 @@ describe('ReplicatingEntity (Prototype Pattern)', () => {
             mockGameField.tiles[y][x + 1].type = TileType.WALL; // Wall
             mockGameField.tiles[y - 1][x].entity = { // занятая клетка
                 id: 'temp-id', type: EntityType.ENEMY, name: 'Occupied', position: { x: x, y: y - 1 },
-                stats: { health: 1, maxHealth: 1, attack: 1, defense: 1, experience: 0, level: 1, experienceToNextLevel: 0 }, symbol: ''
+                stats: { health: 1, maxHealth: 1, attack: 1, defense: 1, experience: 0, level: 1, experienceToNextLevel: 0 }, symbol: '', experience: 10
             };
 
             expect(isValid({ x: x + 1, y })).toBe(false); // стена

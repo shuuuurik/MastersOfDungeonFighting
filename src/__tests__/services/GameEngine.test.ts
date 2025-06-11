@@ -45,6 +45,7 @@ describe('GameEngine Combat, Experience and Levels', () => {
             position: { x: 0, y: 1 },
             stats: { health: 30, maxHealth: 30, attack: 5, defense: 0, experience: 25, level: 1, experienceToNextLevel: 0 },
             symbol: 'E',
+            experience: 10
         };
 
         const mockField = createMockGameField(10, 10);

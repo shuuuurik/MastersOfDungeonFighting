@@ -42,6 +42,7 @@ describe('Behavior Strategies', () => {
             position: { x: 0, y: 0 },
             stats: { health: 50, maxHealth: 50, attack: 5, defense: 2, experience: 0, level: 1, experienceToNextLevel: 0 },
             symbol: 'E',
+            experience: 10
         };
         mockGameField = createMockGameField(10, 10);
 
