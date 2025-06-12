@@ -1,124 +1,67 @@
 @startuml Component Diagram
 
-package "Game Domain" {
-  [Entity] as DOM_Entity
-  [Tile] as DOM_Tile
-  [GameField] as DOM_GameField
-  [GameMap] as DOM_GameMap
-  [GameState] as DOM_GameState
+
+
+' ===========================
+' Основные компоненты системы
+' ===========================
+
+' UI Layer
+component "User Interface" as UI_Layer {
+  [App]
+  [Game Board]
+  [Status Panel]
 }
 
-package "Game Services" {
-  [MapService] as SRV_MapService
-  [GameEngine] as SRV_GameEngine
-  [EntityManager] as SRV_EntityManager
+' Core Logic Layer
+component "Game Core Logic" as Core_Logic {
+  [GameEngine]
+  [MapService]
+  [EntityManager]
 }
 
-package "Design Patterns" {
-  package "Strategy" {
-    [BehaviorStrategy] as PAT_Strategy
-    [AggressiveBehavior] as PAT_Aggressive
-    [PassiveBehavior] as PAT_Passive
-    [FearfulBehavior] as PAT_Fearful
-  }
-  
-  package "Decorator" {
-    [BehaviorDecorator] as PAT_Decorator
-    [ConfusedBehavior] as PAT_ConfusedBehavior
-  }
-  
-  package "Builder" {
-    [MapLoader] as PAT_MapLoader
-    [MapBuilder] as PAT_Builder
-  }
-  
-  package "Abstract Factory" {
-    [EntityFactory] as PAT_Factory
-    [FantasyEntityFactory] as PAT_FantasyFactory
-    [ForestEntityFactory] as PAT_ForestFactory
-  }
-  
-  package "Prototype" {
-    [EntityPrototype] as PAT_EntityPrototype
-    [ReplicatingEntity] as PAT_ReplicatingEntity
-  }
-  
-  package "Command" {
-    [Command] as PAT_Command
-    [MoveCommand] as PAT_MoveCommand
-    [AttackCommand] as PAT_AttackCommand
-    [ConfuseCommand] as PAT_ConfuseCommand
-    [WaitCommand] as PAT_WaitCommand
-    [CommandInvoker] as PAT_CommandInvoker
-  }
-  
-  package "State" {
-    [EnemyState] as PAT_EnemyState
-    [NormalState] as PAT_NormalState
-    [PanicState] as PAT_PanicState
-    [TrackingState] as PAT_TrackingState
-    [PatrolState] as PAT_PatrolState
-  }
+' Domain Layer
+component "Game Domain Data" as Domain_Data {
+  [Game State]
+  [Game Map]
+  [Game Field]
+  [Entities (Player, Enemy, Item)]
 }
 
-package "UI Components" {
-  [GameBoard] as UI_GameBoard
-  [StatusPanel] as UI_StatusPanel
-  [App] as UI_App
+' Pattern-based solutions
+component "Design Patterns" as Design_Patterns {
+  [Behavior Strategies] as DP_Strategy
+  [Enemy States] as DP_State
+  [Entity Factory] as DP_Factory
+  [Map Builder] as DP_Builder
+  [Command Processor] as DP_Command
+  [Replication Prototype] as DP_Prototype
+  [Behavior Decorators] as DP_Decorator
 }
 
-' Domain relationships
-DOM_GameMap --> DOM_GameField
-DOM_GameField --> DOM_Tile
-DOM_Tile --> DOM_Entity
-DOM_GameState --> DOM_GameMap
-DOM_GameState --> DOM_GameField
-DOM_GameState --> DOM_Entity
+' ===========================
+' Взаимодействия между компонентами
+' ===========================
 
-' Service relationships
-SRV_GameEngine --> SRV_MapService
-SRV_GameEngine --> SRV_EntityManager
-SRV_GameEngine --> DOM_GameState
-SRV_GameEngine --> PAT_Strategy
-SRV_GameEngine --> PAT_EnemyState
-SRV_GameEngine --> PAT_ReplicatingEntity
+' UI interacts with Game Core Logic
+UI_Layer --> Core_Logic : Requests actions (move, attack)
 
-SRV_EntityManager --> PAT_Factory
-SRV_EntityManager --> DOM_Entity
+' UI displays Game Domain Data
+UI_Layer --> Domain_Data : Reads game state
 
-' Pattern relationships
-PAT_Strategy <-- PAT_Aggressive
-PAT_Strategy <-- PAT_Passive
-PAT_Strategy <-- PAT_Fearful
+' Game Core Logic manages and updates Game Domain Data
+Core_Logic --> Domain_Data : Manages state & entities
 
-PAT_Strategy <-- PAT_Decorator
-PAT_Decorator <-- PAT_ConfusedBehavior
+' Game Core Logic leverages Design Patterns
+Core_Logic --> Design_Patterns : Utilizes for logic
 
-PAT_Builder --> PAT_MapLoader
-PAT_Builder --> PAT_Factory
+' Specific interactions within Design Patterns
+DP_Builder --> DP_Factory : To create entities
+DP_Decorator --> DP_Strategy : Decorates behaviors
+DP_State --> DP_Strategy : May use
+DP_Prototype --> Domain_Data : Clones/creates new entities
 
-PAT_Factory <-- PAT_FantasyFactory
-PAT_Factory <-- PAT_ForestFactory
-
-PAT_Command <-- PAT_MoveCommand
-PAT_Command <-- PAT_AttackCommand
-PAT_Command <-- PAT_ConfuseCommand
-PAT_Command <-- PAT_WaitCommand
-PAT_CommandInvoker --> PAT_Command
-
-PAT_EnemyState <-- PAT_NormalState
-PAT_EnemyState <-- PAT_PanicState
-PAT_EnemyState <-- PAT_TrackingState
-PAT_EnemyState <-- PAT_PatrolState
-
-PAT_EntityPrototype <-- PAT_ReplicatingEntity
-
-' UI Component relationships
-UI_App --> UI_GameBoard
-UI_App --> UI_StatusPanel
-UI_App --> SRV_GameEngine
-
-UI_GameBoard --> DOM_GameState
-UI_StatusPanel --> DOM_GameState
+DP_Strategy --> Domain_Data : Operates on entities/fields
+DP_State --> Domain_Data : Operates on entities/fields
 
 @enduml

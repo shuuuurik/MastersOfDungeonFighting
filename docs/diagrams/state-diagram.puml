@@ -8,13 +8,10 @@ state "Enemy States" as EnemyStates {
   state "Patrol" as Patrol
   
   Normal --> Panic : Health <= 30%
-  Panic --> Normal : Health > 50%
-  Normal --> Tracking : Player spotted
-  Tracking --> Patrol : Reached last known player position
-  Patrol --> Tracking : Player spotted
-  Patrol --> Normal : Patrol complete
-  Tracking --> Normal : Target too far
-  Panic --> Panic : Health still low
+  Panic --> Tracking : Health > 50% (to last contact spot)
+  Tracking --> Patrol : Reached target position
+  Patrol --> Normal : Damaged / Patrol complete
+  Tracking --> Normal : Target out of range / Given up
 }
 
 ' Game State Machine

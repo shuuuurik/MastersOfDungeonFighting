@@ -46,7 +46,7 @@ package "types" {
     REPLICATING
   }
   
-  interface Entity {
+  interface BaseEntity {
     +id: string
     +type: EntityType
     +position: Position
@@ -59,6 +59,16 @@ package "types" {
     +canReplicate?: boolean
     +replicationChance?: number
     +replicationCount?: number
+  }
+
+  interface EnemyEntity {
+    +type: EntityType.ENEMY
+    +category?: EnemyCategory
+    +experience: number
+  }
+
+  interface OtherEntity {
+    +type: Exclude<EntityType, EntityType.ENEMY>
   }
   
   interface Tile {
@@ -95,22 +105,31 @@ package "types" {
     +turn: number
     +theme: GameTheme
     +replicatingEntities: string[]
+    +confusionCooldown: number
   }
 }
 
 ' Отношения внутри types
 TileType -- Tile
-Position -- Entity
+Position -- BaseEntity
 Position -- Tile
 Position -- GameField
-GameStats -- Entity
-EntityType -- Entity
-EnemyCategory -- Entity
-Entity -- GameState
-Tile -- GameField
-GameField -- GameMap
-GameMap -- GameState
+GameStats -- BaseEntity
+EntityType -- EnemyEntity
+EntityType -- OtherEntity
+EnemyCategory -- EnemyEntity
+
+BaseEntity <|-- EnemyEntity
+BaseEntity <|-- OtherEntity
+
+GameField *-- Tile
+GameMap *-- GameField
+GameState *-- GameMap
 GameTheme -- GameState
+
+GameState *-- EnemyEntity : contains enemies
+GameState *-- OtherEntity : contains player 
+Tile o-- BaseEntity : contains entity
 
 
 ' ===========================
@@ -147,21 +166,20 @@ package "services" {
     -enemyStates: Map<string, EnemyState>
     -originalBehaviors: Map<string, BehaviorStrategy>
     -replicatingEntities: Map<string, ReplicatingEntity>
+    -lastPlayerContactPositions: Map<string, Position>
+    -maxConfusionCooldown: number
     +constructor(theme?: GameTheme)
     +getState(): GameState
     +movePlayer(direction: string): void
     +performAttack(attacker: Entity, defender: Entity): void
-    +confuseEnemyAt(position: Position, duration: number): void
+    +useConfusionAbility(): void
     +processTurn(): void
     -spawnEnemies(field: GameField): Entity[]
-    -getReplicatingEntities(enemies: Entity[]): string[]
+    -confuseEnemy(enemy: Entity, duration: number): void
     -processEnemyTurns(): void
-    -isAdjacentToPlayer(position: Position): boolean
     -combat(attacker: Entity, defender: Entity): void
-    -processReplication(): void
-    -processConfusionEffects(): void
     -updateEnemyStates(): void
-    -giveExperienceToPlayer(amount: number): void
+    -regenerateEnemiesHealth()
     -levelUpPlayer(): void
   }
 }
@@ -175,6 +193,7 @@ GameEngine o-- types.GameState
 GameEngine o-- patterns.strategy.BehaviorStrategy
 GameEngine o-- patterns.state.EnemyState
 GameEngine o-- patterns.prototype.ReplicatingEntity
+GameEngine o-- types.Position
 
 
 ' ===========================
@@ -220,6 +239,7 @@ package "patterns" {
       +execute(entity: Entity, player: Entity, gameField: GameField): Position
       +isConfused(): boolean
       +getTurnsRemaining(): number
+      -getRandomAdjacentPositions(position: Position)
     }
 
     BehaviorDecorator <|-- ConfusedBehavior
@@ -378,7 +398,7 @@ package "patterns" {
     }
     
     class PanicState {
-      -fearfulStrategy: BehaviorStrategy
+      -fearfulStrategy: FearfulBehavior
       -recoveryThreshold: number
       +constructor(recoveryThreshold?: number)
       +getNextPosition(entity: Entity, player: Entity, gameField: GameField, originalStrategy: BehaviorStrategy): Position
@@ -400,15 +420,19 @@ package "patterns" {
       -centerPosition: Position
       -patrolRadius: number
       -patrolPoints: Position[]
+      -validPatrolPoints: Position[]
       -currentPointIndex: number
       -stepsAtCurrentPoint: number
       -maxStepsAtPoint: number
+      -patrolDuration: number
+      -currentPatrolTime: number
+      -lastKnownHealth: number
       +constructor(centerPosition: Position, patrolRadius?: number)
-      -generatePatrolPoints(): void
-      +getNextPosition(entity: Entity, player: Entity, gameField: GameField, originalStrategy: BehaviorStrategy): Position
-      -isValidMove(x: number, y: number, gameMap: GameMap): boolean
+      +getNextPosition(entity: Entity, _: Entity, gameField: GameField, originalStrategy: BehaviorStrategy): Position
       +shouldTransition(entity: Entity): EnemyState | null
       +getName(): string
+      -generatePatrolPoints(gameField: GameField): void
+      -isValidMove(x: number, y: number, gameField: GameField): boolean
     }
 
     EnemyState <|.. NormalState
