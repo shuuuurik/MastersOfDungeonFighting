@@ -1,0 +1,67 @@
+@startuml Component Diagram
+
+
+
+' ===========================
+' Основные компоненты системы
+' ===========================
+
+' UI Layer
+component "User Interface" as UI_Layer {
+  [App]
+  [Game Board]
+  [Status Panel]
+}
+
+' Core Logic Layer
+component "Game Core Logic" as Core_Logic {
+  [GameEngine]
+  [MapService]
+  [EntityManager]
+}
+
+' Domain Layer
+component "Game Domain Data" as Domain_Data {
+  [Game State]
+  [Game Map]
+  [Game Field]
+  [Entities (Player, Enemy, Item)]
+}
+
+' Pattern-based solutions
+component "Design Patterns" as Design_Patterns {
+  [Behavior Strategies] as DP_Strategy
+  [Enemy States] as DP_State
+  [Entity Factory] as DP_Factory
+  [Map Builder] as DP_Builder
+  [Command Processor] as DP_Command
+  [Replication Prototype] as DP_Prototype
+  [Behavior Decorators] as DP_Decorator
+}
+
+' ===========================
+' Взаимодействия между компонентами
+' ===========================
+
+' UI interacts with Game Core Logic
+UI_Layer --> Core_Logic : Requests actions (move, attack)
+
+' UI displays Game Domain Data
+UI_Layer --> Domain_Data : Reads game state
+
+' Game Core Logic manages and updates Game Domain Data
+Core_Logic --> Domain_Data : Manages state & entities
+
+' Game Core Logic leverages Design Patterns
+Core_Logic --> Design_Patterns : Utilizes for logic
+
+' Specific interactions within Design Patterns
+DP_Builder --> DP_Factory : To create entities
+DP_Decorator --> DP_Strategy : Decorates behaviors
+DP_State --> DP_Strategy : May use
+DP_Prototype --> Domain_Data : Clones/creates new entities
+
+DP_Strategy --> Domain_Data : Operates on entities/fields
+DP_State --> Domain_Data : Operates on entities/fields
+
+@enduml
