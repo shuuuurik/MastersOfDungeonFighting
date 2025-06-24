@@ -7,9 +7,10 @@ interface StatusPanelProps {
   switchTheme: () => void;
   isGameRunning: boolean;
   startNewGame: () => void;
+  loadMap: () => void;
 }
 
-const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGameRunning, startNewGame }) => {
+const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGameRunning, startNewGame, loadMap }) => {
   const { player, gameOver, victory, turn, confusionCooldown } = gameState;
   const { stats } = player;
   
@@ -28,6 +29,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGam
   return (
     <div className="status-panel">
       <h2>Roguelike Dungeon Fighter</h2>
+      <button onClick={loadMap} className="load-map-button">Load Map</button>
 
       <div className="game-status">
         {gameOver ? (

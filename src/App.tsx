@@ -78,12 +78,19 @@ function App() {
     setGameState(newGameEngine.getState());
     setIsGameRunning(true);
   };
+
+  const loadMap = () => {
+    const newGameEngine = new GameEngine(gameState.theme, true);
+    setGameEngine(newGameEngine);
+    setGameState(newGameEngine.getState());
+    setIsGameRunning(true);
+  }
   
   return (
     <div className="game-container">     
       <div className="game-layout">
         <GameBoard gameState={gameState} />
-        <StatusPanel gameState={gameState} switchTheme={switchTheme} isGameRunning={isGameRunning} startNewGame={startNewGame}  />
+        <StatusPanel gameState={gameState} switchTheme={switchTheme} isGameRunning={isGameRunning} startNewGame={startNewGame} loadMap={loadMap} />
       </div>
     </div>
   );
