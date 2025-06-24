@@ -85,14 +85,13 @@ export class MapBuilder {
    */
   build(): GameMap {
     // If a map file is specified, try to load it
-    // if (this.mapFile) {
-    //   try {
-    //     return this.mapLoader.loadMapFromFile(this.mapFile);
-    //   } catch (error) {
-    //     console.error("Failed to load map from file:", error);
-    //     // Fall back to generated map
-    //   }
-    // }
+    if (this.mapFile) {
+      try {
+        return this.mapLoader.loadMapFromFile(this.mapFile);
+      } catch (error) {
+        console.error("Failed to load map from file:", error);
+      }
+    }
     
     // Otherwise, generate a map
     return this.generateMap();

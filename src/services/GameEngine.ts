@@ -25,7 +25,7 @@ export class GameEngine {
   private lastPlayerContactPositions: Map<string, Position> = new Map();
   private readonly maxConfusionCooldown: number = 10;
   
-  constructor(theme: GameTheme = GameTheme.FANTASY) {
+  constructor(theme: GameTheme = GameTheme.FANTASY, loadMap: boolean = false) {
     this.entityManager = new EntityManager(theme);
     
     const builder = new MapBuilder()
@@ -34,6 +34,11 @@ export class GameEngine {
       .setWidth(11)
       .setHeight(11)
       .setEntityFactory(this.entityManager.getEntityFactory());
+
+    if (loadMap) {
+      builder.setMapFile('src/assets/map.json');
+    }
+
     this.mapService = new MapService(builder);
 
     const currentField: GameField = this.mapService.getCurrentField();
