@@ -43,6 +43,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={true}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
 
@@ -63,6 +64,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={true}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     const healthProgressBarFill = document.querySelector('.progress-bar-fill.health') as HTMLElement;
@@ -76,6 +78,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={true}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     const expProgressBarFill = document.querySelector('.progress-bar-fill.exp') as HTMLElement;
@@ -89,6 +92,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={true}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     expect(screen.getByText('Turn: 15')).toBeInTheDocument();
@@ -104,6 +108,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={false}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     expect(screen.getByText('Game Over!')).toBeInTheDocument();
@@ -118,6 +123,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={false}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     expect(screen.getByText('Victory!')).toBeInTheDocument();
@@ -131,6 +137,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={true}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     expect(screen.getByText(/melee:\s*2/i)).toBeInTheDocument();
@@ -145,6 +152,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={false} // игра не запущена
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     const newGameButton = screen.getByRole('button', { name: /start new game/i });
@@ -158,6 +166,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={false}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     const newGameButton = screen.getByRole('button', { name: /start new game/i });
@@ -173,6 +182,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={true}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     expect(screen.getByText('Theme: FANTASY')).toBeInTheDocument();
@@ -185,6 +195,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={true}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     const themeButton = screen.getByRole('button', { name: /switch to forest theme/i });
@@ -201,6 +212,7 @@ describe('StatusPanel', () => {
         switchTheme={mockSwitchTheme}
         isGameRunning={true}
         startNewGame={mockStartNewGame}
+        loadMap={() => {}}
       />
     );
     const themeButtonForest = screen.getByRole('button', { name: /switch to fantasy theme/i });
