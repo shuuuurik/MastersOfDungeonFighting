@@ -2,22 +2,23 @@
   padding: 1rem;
   display: flex;
   flex-direction: column;
+  gap: 1rem;
   background-color: #333;
   border: 2px solid #444;
   border-radius: 8px;
   width: 100%;
   max-width: 300px;
+}
 
-  h2 {
-    margin: 0 0 1rem 0;
-    font-size: 1.5rem;
-  }
+.panel-section {
+  background-color: #3c3c3c;
+  padding: 1rem;
+  border-radius: 8px;
+}
 
-  h3 {
-    margin: 0.5rem 0;
-    font-size: 1.2rem;
-    color: #ccc;
-  }
+.status-panel h2, .status-panel h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
 }
 
 .game-status {
@@ -104,4 +105,54 @@
 
 .ability-status {
   margin-bottom: 1.5rem;
+}
+
+.game-controls {
+  margin-top: auto;
+}
+
+.new-game-button, .theme-button, .load-map-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.theme-button {
+  background-color: #008CBA;
+}
+
+.new-game-button:hover, .theme-button:hover, .load-map-button:hover {
+  opacity: 0.9;
+}
+
+.inventory ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.inventory li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+}
+
+.inventory button {
+  padding: 3px 8px;
+  background-color: #555;
+  border: 1px solid #777;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.inventory button:hover {
+  background-color: #666;
 }

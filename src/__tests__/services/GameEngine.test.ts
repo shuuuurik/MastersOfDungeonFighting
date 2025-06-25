@@ -121,9 +121,10 @@ describe('GameEngine Combat, Experience and Levels', () => {
 
         enemy.stats.health = 1;
         enemy.stats.attack = 1;
+        (enemy as any).experience = 20;
         // enemy.stats.experience = 25; не влияет на количество получаемого опыта,
-        // потому что GameEngine использует enemy.stats.level * 10
-        enemy.stats.level = 2; // враг дает 20 опыта (2 * 10)
+        // потому что GameEngine использует enemy.experience
+        enemy.stats.level = 2; // враг дает 20 опыта
 
         gameEngine.performAttack(player, enemy);
 

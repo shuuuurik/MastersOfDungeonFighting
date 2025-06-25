@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import GameBoard from './components/GameBoard';
 import StatusPanel from './components/StatusPanel';
+import InventoryPanel from './components/InventoryPanel';
 import { GameEngine } from './services/GameEngine';
 import { GameState, GameTheme } from './types/game';
+import { Item } from './types/inventory';
 import { CommandInvoker, MoveCommand, WaitCommand, ConfuseCommand } from './patterns/command/Command';
 
 function App() {
@@ -85,12 +87,20 @@ function App() {
     setGameState(newGameEngine.getState());
     setIsGameRunning(true);
   }
+
+  const handleEquipItem = (item: Item) => {
+    gameEngine.equipItem(item);
+    setGameState({ ...gameEngine.getState() });
+  };
   
   return (
-    <div className="game-container">     
+    <div className="game-container">
       <div className="game-layout">
-        <GameBoard gameState={gameState} />
-        <StatusPanel gameState={gameState} switchTheme={switchTheme} isGameRunning={isGameRunning} startNewGame={startNewGame} loadMap={loadMap} />
+        {gameState.player.inventory && <InventoryPanel inventory={gameState.player.inventory} equipItem={handleEquipItem} />}
+        <div className="game-board-container">
+          <GameBoard gameState={gameState} />
+        </div>
+        <StatusPanel gameState={gameState} switchTheme={switchTheme} isGameRunning={isGameRunning} startNewGame={startNewGame} loadMap={loadMap} equipItem={handleEquipItem} />
       </div>
     </div>
   );

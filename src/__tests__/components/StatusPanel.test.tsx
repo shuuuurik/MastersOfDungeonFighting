@@ -44,6 +44,7 @@ describe('StatusPanel', () => {
         isGameRunning={true}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
 
@@ -65,6 +66,7 @@ describe('StatusPanel', () => {
         isGameRunning={true}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     const healthProgressBarFill = document.querySelector('.progress-bar-fill.health') as HTMLElement;
@@ -79,6 +81,7 @@ describe('StatusPanel', () => {
         isGameRunning={true}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     const expProgressBarFill = document.querySelector('.progress-bar-fill.exp') as HTMLElement;
@@ -93,6 +96,7 @@ describe('StatusPanel', () => {
         isGameRunning={true}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     expect(screen.getByText('Turn: 15')).toBeInTheDocument();
@@ -109,6 +113,7 @@ describe('StatusPanel', () => {
         isGameRunning={false}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     expect(screen.getByText('Game Over!')).toBeInTheDocument();
@@ -124,6 +129,7 @@ describe('StatusPanel', () => {
         isGameRunning={false}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     expect(screen.getByText('Victory!')).toBeInTheDocument();
@@ -138,6 +144,7 @@ describe('StatusPanel', () => {
         isGameRunning={true}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     expect(screen.getByText(/melee:\s*2/i)).toBeInTheDocument();
@@ -153,6 +160,7 @@ describe('StatusPanel', () => {
         isGameRunning={false} // игра не запущена
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     const newGameButton = screen.getByRole('button', { name: /start new game/i });
@@ -167,6 +175,7 @@ describe('StatusPanel', () => {
         isGameRunning={false}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     const newGameButton = screen.getByRole('button', { name: /start new game/i });
@@ -183,6 +192,7 @@ describe('StatusPanel', () => {
         isGameRunning={true}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     expect(screen.getByText('Theme: FANTASY')).toBeInTheDocument();
@@ -196,6 +206,7 @@ describe('StatusPanel', () => {
         isGameRunning={true}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     const themeButton = screen.getByRole('button', { name: /switch to forest theme/i });
@@ -213,6 +224,7 @@ describe('StatusPanel', () => {
         isGameRunning={true}
         startNewGame={mockStartNewGame}
         loadMap={() => {}}
+        equipItem={jest.fn()}
       />
     );
     const themeButtonForest = screen.getByRole('button', { name: /switch to fantasy theme/i });

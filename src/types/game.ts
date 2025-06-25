@@ -1,3 +1,5 @@
+import { Inventory, Item } from './inventory';
+
 export enum TileType {
   WALL = 'WALL',
   RIVER = 'RIVER',
@@ -31,6 +33,7 @@ export enum EntityType {
   PLAYER = 'PLAYER',
   ENEMY = 'ENEMY',
   ITEM = 'ITEM',
+  HEALTH_PACK = 'HEALTH_PACK',
 }
 
 export enum EnemyCategory {
@@ -46,12 +49,14 @@ export interface BaseEntity {
   stats: GameStats;
   symbol: string;
   name: string;
+  inventory?: Inventory;
   category?: EnemyCategory;
   confused?: boolean;
   confusionTurns?: number;
   canReplicate?: boolean;
   replicationChance?: number;
   replicationCount?: number;
+  item?: Item;
 }
 
 export interface EnemyEntity extends BaseEntity {
