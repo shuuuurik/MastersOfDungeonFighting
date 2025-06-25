@@ -1,0 +1,87 @@
+.inventory-panel {
+  width: 250px;
+  height: 100%;
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+  padding: 15px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border-right: 2px solid #444;
+}
+
+.inventory-panel h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  text-align: center;
+  border-bottom: 1px solid #555;
+  padding-bottom: 10px;
+  font-size: 20px;
+}
+
+.equipped-items {
+  background-color: #222;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.equipped-items h3 {
+  margin-top: 0;
+  border-bottom: 1px solid #555;
+  padding-bottom: 5px;
+  font-size: 18px;
+  text-align: left;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 14px;
+}
+
+.inventory-list {
+  flex-grow: 1;
+  overflow-y: auto; /* This enables scrolling */
+}
+
+.inventory-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.inventory-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 5px;
+  border-bottom: 1px solid #444;
+}
+
+.inventory-list .item-name {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.inventory-list button {
+  padding: 4px 10px;
+  background-color: #555;
+  border: 1px solid #777;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.inventory-list button:hover {
+  background-color: #666;
+}
+
+.empty-inventory {
+  text-align: center;
+  color: #888;
+  justify-content: center;
+} 

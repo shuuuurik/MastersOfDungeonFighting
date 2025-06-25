@@ -1,5 +1,6 @@
 import React from 'react';
 import { GameState, GameTheme } from '../types/game';
+import { Item } from '../types/inventory';
 import '../styles/StatusPanel.css';
 
 interface StatusPanelProps {
@@ -8,9 +9,10 @@ interface StatusPanelProps {
   isGameRunning: boolean;
   startNewGame: () => void;
   loadMap: () => void;
+  equipItem: (item: Item) => void;
 }
 
-const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGameRunning, startNewGame, loadMap }) => {
+const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGameRunning, startNewGame, loadMap, equipItem }) => {
   const { player, gameOver, victory, turn, confusionCooldown } = gameState;
   const { stats } = player;
   
@@ -28,19 +30,23 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGam
 
   return (
     <div className="status-panel">
-      <h2>Roguelike Dungeon Fighter</h2>
-      <button onClick={loadMap} className="load-map-button">Load Map</button>
+      <div className="panel-section">
+        <h2>Roguelike Dungeon Fighter</h2>
+        <button onClick={loadMap} className="load-map-button">Load Map</button>
+      </div>
 
-      <div className="game-status">
-        {gameOver ? (
-          <h2>{victory ? 'Victory!' : 'Game Over!'}</h2>
-        ) : (
-          <h2>Turn: {turn}</h2>
-        )}
-        <div className="theme-indicator">Theme: {gameState.theme}</div>
+      <div className="panel-section">
+        <div className="game-status">
+          {gameOver ? (
+            <h2>{victory ? 'Victory!' : 'Game Over!'}</h2>
+          ) : (
+            <h2>Turn: {turn}</h2>
+          )}
+          <div className="theme-indicator">Theme: {gameState.theme}</div>
+        </div>
       </div>
       
-      <div className="player-stats">
+      <div className="panel-section player-stats">
         <h3>{player.name}</h3>
         
         <div className="stat-row">
@@ -88,8 +94,8 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGam
           <span>Defense: {stats.defense}</span>
         </div>
       </div>
-      
-      <div className="enemy-summary">
+
+      <div className="panel-section enemy-summary">
         <h3>Enemies</h3>
         <ul>
           {Object.entries(enemyCounts).map(([type, count]) => (
@@ -101,17 +107,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ gameState, switchTheme, isGam
         <div className="total-enemies">Total: {gameState.enemies.length}</div>
       </div>
       
-      <div className="game-help">
-        <h3>Help</h3>
-        <ul>
-          <li>WASD or Arrow keys: Move</li>
-          <li>Move into enemies to attack</li>
-          <li>Space: Skip turn</li>
-          <li>Press C to confuse nearby enemies</li>
-        </ul>
-      </div>
-
-      <div className="game-controls">
+      <div className="panel-section game-controls">
         {!isGameRunning ? (
           <button onClick={startNewGame} className="new-game-button">
             Start New Game

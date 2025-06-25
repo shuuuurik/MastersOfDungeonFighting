@@ -9,6 +9,9 @@ import { EnemyState } from '../patterns/state/EnemyState';
 import { NormalState } from '../patterns/state/NormalState';
 import { TrackingState } from '../patterns/state/TrackingState'
 import { MapService } from './MapService';
+import { InventoryService } from './InventoryService';
+import { ItemFactory } from '../patterns/factory/ItemFactory';
+import { Item } from '../types/inventory';
 
 export class GameEngine {
   private mapService: MapService;
@@ -45,6 +48,7 @@ export class GameEngine {
     
     const playerPosition = this.entityManager.findRandomEmptyPosition(currentField) || { x: 1, y: 1 };
     const player = this.entityManager.createPlayer(playerPosition);
+    player.inventory = InventoryService.initializeInventory();
     currentField.tiles[playerPosition.y][playerPosition.x].entity = player;
     
     const enemies: Entity[] = this.spawnEnemies(currentField);
@@ -226,6 +230,12 @@ export class GameEngine {
     });
   }
   
+  equipItem(item: Item): void {
+    if (this.state.gameOver) return;
+
+    this.state.player = InventoryService.equipItem(this.state.player, item);
+  }
+
   processTurn(): void {
     if (this.state.gameOver) return;
     
@@ -320,6 +330,7 @@ export class GameEngine {
       
       // Handle enemy death
       if (defender.type === EntityType.ENEMY) {
+        this.state.enemies = this.state.enemies.filter(e => e.id !== defender.id);
         // Remove enemy from the map
         this.state.currentField.tiles[defender.position.y][defender.position.x].entity = null;
         
@@ -331,7 +342,14 @@ export class GameEngine {
         
         // Grant experience to player if player was the attacker
         if (attacker.type === EntityType.PLAYER) {
-          this.giveExperienceToPlayer(defender.stats.level * defender.experience);
+          this.giveExperienceToPlayer((defender as any).experience);
+
+          // Loot drop logic
+          const dropChance = 0.2; // 20% chance
+          if (Math.random() < dropChance && this.state.player.inventory) {
+              const newItem = ItemFactory.createRandomItem();
+              this.state.player.inventory = InventoryService.addItem(this.state.player.inventory, newItem);
+          }
         }
       }
       

@@ -1,3 +1,5 @@
+import { Inventory } from './inventory';
+
 export enum TileType {
   WALL = 'WALL',
   RIVER = 'RIVER',
@@ -46,6 +48,7 @@ export interface BaseEntity {
   stats: GameStats;
   symbol: string;
   name: string;
+  inventory?: Inventory;
   category?: EnemyCategory;
   confused?: boolean;
   confusionTurns?: number;
