@@ -33,6 +33,7 @@ export enum EntityType {
   PLAYER = 'PLAYER',
   ENEMY = 'ENEMY',
   ITEM = 'ITEM',
+  HEALTH_PACK = 'HEALTH_PACK',
 }
 
 export enum EnemyCategory {

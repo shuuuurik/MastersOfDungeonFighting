@@ -149,6 +149,13 @@ export class GameEngine {
       this.state.player.position = { x: newX, y: newY };
       targetTile.entity = this.state.player;
       this.processTurn();
+    } else if (targetTile.entity && targetTile.entity.type === EntityType.HEALTH_PACK) {
+      // Pick up health pack
+      this.state.player.stats.health = Math.min(this.state.player.stats.maxHealth, this.state.player.stats.health + 25);
+      currentField.tiles[y][x].entity = null;
+      this.state.player.position = { x: newX, y: newY };
+      targetTile.entity = this.state.player;
+      this.processTurn();
     } else {
       // Move player to the new position
       currentField.tiles[y][x].entity = null;
@@ -342,6 +349,11 @@ export class GameEngine {
       if (attacker.type === EntityType.ENEMY && defender.type === EntityType.PLAYER) {
         this.state.gameOver = true;
       }
+      
+      // Check if it was the last enemy
+      if (this.state.enemies.length === 0) {
+        this.spawnHealthPack();
+      }
     }
   }
   
@@ -526,5 +538,22 @@ export class GameEngine {
     player.stats.health = player.stats.maxHealth;
     player.stats.attack += 2;
     player.stats.defense += 1;
+  }
+
+  private spawnHealthPack(): void {
+    if (Math.random() <= 1 / 5) {
+      const emptyPosition = this.entityManager.findRandomEmptyPosition(this.state.currentField);
+      if (emptyPosition) {
+        const healthPack: Entity = {
+          id: uuidv4(),
+          type: EntityType.HEALTH_PACK,
+          name: 'Health Pack',
+          position: emptyPosition,
+          symbol: '😊',
+          stats: { health: 0, maxHealth: 0, attack: 0, defense: 0, experience: 0, level: 0, experienceToNextLevel: 0 },
+        };
+        this.state.currentField.tiles[emptyPosition.y][emptyPosition.x].entity = healthPack;
+      }
+    }
   }
 }
