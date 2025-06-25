@@ -14,15 +14,24 @@ const InventoryPanel: React.FC<InventoryPanelProps> = ({ inventory, equipItem })
         <h3>Equipped</h3>
         <div className="stat-row">
           <span>Sword: {inventory.equipped.Sword?.name || 'None'}</span>
-          <span>(+{inventory.equipped.Sword?.modifier || 0})</span>
+          <span>
+            (+{inventory.equipped.Sword?.modifier || 0})
+            {inventory.equipped.Sword && ` [${inventory.equipped.Sword.durability}]`}
+          </span>
         </div>
         <div className="stat-row">
           <span>Armor: {inventory.equipped.Armor?.name || 'None'}</span>
-          <span>(+A{inventory.equipped.Armor?.modifier || 0})</span>
+          <span>
+            (+A{inventory.equipped.Armor?.modifier || 0})
+            {inventory.equipped.Armor && ` [${inventory.equipped.Armor.durability}]`}
+          </span>
         </div>
         <div className="stat-row">
           <span>Ring: {inventory.equipped.Ring?.name || 'None'}</span>
-          <span>(+{inventory.equipped.Ring?.modifier || 0})</span>
+          <span>
+            (+{inventory.equipped.Ring?.modifier || 0})
+            {inventory.equipped.Ring && ` [${inventory.equipped.Ring.durability}]`}
+          </span>
         </div>
       </div>
       <h3>Inventory</h3>

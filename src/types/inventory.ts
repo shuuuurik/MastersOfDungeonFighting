@@ -10,6 +10,8 @@ export interface Item {
   type: ItemType;
   modifier: number; // Represents attack for Sword, defense for Armor, etc.
   description: string;
+  dropChance: number; // Base chance of the item dropping
+  durability: number; // How many battles the item can withstand
 }
 
 export interface EquipmentSlot {

@@ -1,4 +1,4 @@
-import { Inventory } from './inventory';
+import { Inventory, Item } from './inventory';
 
 export enum TileType {
   WALL = 'WALL',
@@ -55,6 +55,7 @@ export interface BaseEntity {
   canReplicate?: boolean;
   replicationChance?: number;
   replicationCount?: number;
+  item?: Item;
 }
 
 export interface EnemyEntity extends BaseEntity {

@@ -1,5 +1,6 @@
 import { EnemyCategory, Entity, EntityType, GameField, GameState, GameTheme, 
   Position, TileType} from '../types/game';
+import { v4 as uuidv4 } from 'uuid';
 import { MapBuilder } from '../patterns/builder/MapBuilder';
 import { EntityManager } from './EntityManager';
 import { BehaviorStrategy } from '../patterns/strategy/BehaviorStrategy';
@@ -11,7 +12,7 @@ import { TrackingState } from '../patterns/state/TrackingState'
 import { MapService } from './MapService';
 import { InventoryService } from './InventoryService';
 import { ItemFactory } from '../patterns/factory/ItemFactory';
-import { Item } from '../types/inventory';
+import { Item, ItemType } from '../types/inventory';
 
 export class GameEngine {
   private mapService: MapService;
@@ -137,6 +138,17 @@ export class GameEngine {
     const targetTile = currentField.tiles[newY][newX];
     if (targetTile.entity && targetTile.entity.type === EntityType.ENEMY) {
       this.performAttack(this.state.player, targetTile.entity);
+    } else if (targetTile.entity && targetTile.entity.type === EntityType.ITEM && targetTile.entity.item) {
+      // Pick up item
+      const item = targetTile.entity.item;
+      this.state.player = {
+        ...this.state.player,
+        inventory: InventoryService.addItem(this.state.player.inventory!, item),
+      }
+      currentField.tiles[y][x].entity = null;
+      this.state.player.position = { x: newX, y: newY };
+      targetTile.entity = this.state.player;
+      this.processTurn();
     } else {
       // Move player to the new position
       currentField.tiles[y][x].entity = null;
@@ -313,56 +325,91 @@ export class GameEngine {
   }
   
   private combat(attacker: Entity, defender: Entity): void {
-    // Calculate damage
-    const damage = Math.max(1, attacker.stats.attack - defender.stats.defense);
-    // Apply damage
+    const damage = Math.max(0, attacker.stats.attack - defender.stats.defense);
     defender.stats.health -= damage;
-    
-    // If player attacks enemy, record the contact position
-    if (attacker.type === EntityType.PLAYER && defender.type === EntityType.ENEMY) {
-      // Store the enemy's current position as the last contact point
-      this.lastPlayerContactPositions.set(defender.id, {...defender.position});
-    }
-    
-    // Check if defender is dead
-    if (defender.stats.health <= 0) {
-      defender.stats.health = 0;
-      
-      // Handle enemy death
-      if (defender.type === EntityType.ENEMY) {
-        this.state.enemies = this.state.enemies.filter(e => e.id !== defender.id);
-        // Remove enemy from the map
-        this.state.currentField.tiles[defender.position.y][defender.position.x].entity = null;
-        
-        // Remove from replicating entities if applicable
-        if (this.replicatingEntities.has(defender.id)) {
-          this.replicatingEntities.delete(defender.id);
-          this.state.replicatingEntities = this.state.replicatingEntities.filter(id => id !== defender.id);
-        }
-        
-        // Grant experience to player if player was the attacker
-        if (attacker.type === EntityType.PLAYER) {
-          this.giveExperienceToPlayer((defender as any).experience);
 
-          // Loot drop logic
-          const dropChance = 0.2; // 20% chance
-          if (Math.random() < dropChance && this.state.player.inventory) {
-              const newItem = ItemFactory.createRandomItem();
-              this.state.player.inventory = InventoryService.addItem(this.state.player.inventory, newItem);
-          }
-        }
+    console.log(`${attacker.name} attacks ${defender.name} for ${damage} damage.`);
+
+    if (defender.stats.health <= 0) {
+      console.log(`${defender.name} has been defeated.`);
+      this.state.currentField.tiles[defender.position.y][defender.position.x].entity = null;
+      this.state.enemies = this.state.enemies.filter(e => e.id !== defender.id);
+
+      if (defender.type === EntityType.ENEMY) {
+        this.giveExperienceToPlayer(defender.experience);
+        this.handleEnemyDefeat(defender);
       }
-      
-      // Handle player death
-      if (defender.type === EntityType.PLAYER) {
+      if (attacker.type === EntityType.ENEMY && defender.type === EntityType.PLAYER) {
         this.state.gameOver = true;
       }
     }
   }
   
+  private handleEnemyDefeat(enemy: Entity): void {
+    this.handleLootDrop(enemy);
+    this.decreaseItemsDurability();
+  }
+
+  private handleLootDrop(enemy: Entity): void {
+    let multiplier = 1;
+    switch (enemy.category) {
+      case EnemyCategory.RANGED:
+        multiplier = 2;
+        break;
+      case EnemyCategory.ELITE:
+        multiplier = 10;
+        break;
+      default:
+        multiplier = 1;
+    }
+
+    const itemTypes = [ItemType.Sword, ItemType.Armor, ItemType.Ring];
+    const randomTypeIndex = Math.floor(Math.random() * 3);
+    const selectedType = itemTypes[randomTypeIndex];
+
+    const possibleItems = ItemFactory.getItemsByType(selectedType);
+
+    for (const item of possibleItems) {
+      if (Math.random() < item.dropChance * multiplier) {
+        const itemToDrop: Item = { ...item, id: uuidv4() };
+
+        const itemEntity: Entity = {
+          id: itemToDrop.id,
+          type: EntityType.ITEM,
+          name: itemToDrop.name,
+          position: enemy.position,
+          symbol: 'i',
+          stats: { health: 0, maxHealth: 0, attack: 0, defense: 0, experience: 0, level: 0, experienceToNextLevel: 0 },
+          item: itemToDrop,
+        };
+        
+        this.state.currentField.tiles[enemy.position.y][enemy.position.x].entity = itemEntity;
+        
+        break; 
+      }
+    }
+  }
+
+  private decreaseItemsDurability(): void {
+    const player = this.state.player;
+    if (player.inventory) {
+      const equipped = player.inventory.equipped;
+      for (const slot in equipped) {
+        const itemType = slot as ItemType;
+        const item = equipped[itemType];
+        if (item) {
+          item.durability--;
+          if (item.durability <= 0) {
+            this.state.player = InventoryService.destroyEquippedItem(this.state.player, itemType);
+          }
+        }
+      }
+    }
+  }
+
   private processReplication(): void {
-    // Process replication for all replicating entities
-    const newEntities: Entity[] = [];
+    const newEnemies: Entity[] = [];
+    const currentField = this.mapService.getCurrentField();
     
     for (const [entityId, replicator] of this.replicatingEntities.entries()) {
       // Find the entity in the state
@@ -373,7 +420,7 @@ export class GameEngine {
       const newEntity = replicator.tryReplicate(this.state.currentField);
       if (newEntity) {
         // Add to game state and map
-        newEntities.push(newEntity);
+        newEnemies.push(newEntity);
         this.state.currentField.tiles[newEntity.position.y][newEntity.position.x].entity = newEntity;
         
         // Create a replicator for the new entity
@@ -396,8 +443,8 @@ export class GameEngine {
     }
     
     // Add new entities to the game state
-    if (newEntities.length > 0) {
-      this.state.enemies = [...this.state.enemies, ...newEntities];
+    if (newEnemies.length > 0) {
+      this.state.enemies = [...this.state.enemies, ...newEnemies];
     }
   }
   
